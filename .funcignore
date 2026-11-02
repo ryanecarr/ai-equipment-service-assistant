@@ -1,0 +1,14 @@
+.venv/
+.claude/
+.git*
+README.md
+local.settings.json
+local.settings.json.example
+__pycache__/
+seed-data/
+infra/
+scripts/
+tests/
+ui/**
+requirements-dev.txt
+.pytest_cache/

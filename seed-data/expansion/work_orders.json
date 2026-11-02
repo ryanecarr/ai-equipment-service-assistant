@@ -1,0 +1,997 @@
+{
+  "CAT305-TC-4041": [
+    {
+      "work_order_id": "WO-20001",
+      "date": "2025-02-22",
+      "reported_issue": "Joystick response erratic",
+      "resolution": "Calibrated controls and replaced left joystick potentiometer",
+      "technician_notes": "No fault codes stored after calibration."
+    },
+    {
+      "work_order_id": "WO-20002",
+      "date": "2025-04-03",
+      "reported_issue": "Hydraulic hose weeping at cylinder",
+      "resolution": "Replaced hose and clamps",
+      "technician_notes": "Hose chafed at clamp point; rerouted to prevent recurrence."
+    },
+    {
+      "work_order_id": "WO-20003",
+      "date": "2026-02-17",
+      "reported_issue": "Black smoke at high load",
+      "resolution": "Replaced air filter elements and inspected turbo hose",
+      "technician_notes": "Turbo hose clamp was loose and has been retorqued."
+    },
+    {
+      "work_order_id": "WO-20004",
+      "date": "2026-03-23",
+      "reported_issue": "Alternator warning on startup",
+      "resolution": "Replaced alternator belt tensioner",
+      "technician_notes": "Charging voltage verified at 28V after repair."
+    },
+    {
+      "work_order_id": "WO-20005",
+      "date": "2026-05-11",
+      "reported_issue": "Intermittent loss of display screen",
+      "resolution": "Reseated monitor harness and replaced corroded connector",
+      "technician_notes": "Water ingress at cab connector; dielectric grease applied."
+    },
+    {
+      "work_order_id": "WO-20006",
+      "date": "2026-06-16",
+      "reported_issue": "Coolant loss with no visible leak",
+      "resolution": "Replaced radiator cap and pressure-tested system",
+      "technician_notes": "System held pressure for 30 minutes after repair."
+    }
+  ],
+  "CAT308-BH-2465": [
+    {
+      "work_order_id": "WO-20007",
+      "date": "2025-02-11",
+      "reported_issue": "Hydraulic hose weeping at cylinder",
+      "resolution": "Replaced hose and clamps",
+      "technician_notes": "Hose chafed at clamp point; rerouted to prevent recurrence."
+    },
+    {
+      "work_order_id": "WO-20008",
+      "date": "2025-03-14",
+      "reported_issue": "Swing brake slow to release",
+      "resolution": "Replaced swing brake solenoid valve",
+      "technician_notes": "Pilot pressure confirmed within spec after replacement."
+    },
+    {
+      "work_order_id": "WO-20009",
+      "date": "2025-10-15",
+      "reported_issue": "Slow travel on left track",
+      "resolution": "Replaced travel motor case drain filter and flushed the line",
+      "technician_notes": "Metal fines found in filter; sample sent for oil analysis."
+    },
+    {
+      "work_order_id": "WO-20010",
+      "date": "2026-10-17",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT330-ID-9225": [
+    {
+      "work_order_id": "WO-20011",
+      "date": "2026-05-27",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT349-SD-1929": [
+    {
+      "work_order_id": "WO-20012",
+      "date": "2025-03-05",
+      "reported_issue": "Joystick response erratic",
+      "resolution": "Calibrated controls and replaced left joystick potentiometer",
+      "technician_notes": "No fault codes stored after calibration."
+    },
+    {
+      "work_order_id": "WO-20013",
+      "date": "2025-08-25",
+      "reported_issue": "Intermittent loss of display screen",
+      "resolution": "Reseated monitor harness and replaced corroded connector",
+      "technician_notes": "Water ingress at cab connector; dielectric grease applied."
+    },
+    {
+      "work_order_id": "WO-20014",
+      "date": "2025-12-26",
+      "reported_issue": "Hydraulic oil temperature high under load",
+      "resolution": "Cleaned oil cooler fins and replaced fan drive belt",
+      "technician_notes": "Cooler was heavily packed with debris from site dust."
+    }
+  ],
+  "CAT395-RU-5747": [
+    {
+      "work_order_id": "WO-20015",
+      "date": "2025-03-24",
+      "reported_issue": "Slow travel on left track",
+      "resolution": "Replaced travel motor case drain filter and flushed the line",
+      "technician_notes": "Metal fines found in filter; sample sent for oil analysis."
+    },
+    {
+      "work_order_id": "WO-20016",
+      "date": "2025-04-17",
+      "reported_issue": "Air conditioning not cooling",
+      "resolution": "Recharged refrigerant and replaced cabin filter",
+      "technician_notes": "Pressure test found a slow leak at the compressor fitting, which was tightened."
+    },
+    {
+      "work_order_id": "WO-20017",
+      "date": "2026-02-03",
+      "reported_issue": "Excessive track wear on right side",
+      "resolution": "Replaced track shoes and adjusted tension",
+      "technician_notes": "Sprocket wear within limits. Recheck tension in 250 hours."
+    }
+  ],
+  "CATD3-LA-1839": [
+    {
+      "work_order_id": "WO-20018",
+      "date": "2025-02-16",
+      "reported_issue": "Blade drifts when holding grade",
+      "resolution": "Rebuilt lift valve and recalibrated blade control",
+      "technician_notes": "Grade held within tolerance on test pass."
+    },
+    {
+      "work_order_id": "WO-20019",
+      "date": "2025-03-04",
+      "reported_issue": "Work lights inoperative",
+      "resolution": "Replaced blown fuse and repaired chafed harness",
+      "technician_notes": "Harness rubbing on cab bracket; added protective loom."
+    },
+    {
+      "work_order_id": "WO-20020",
+      "date": "2025-11-18",
+      "reported_issue": "Coolant loss with no visible leak",
+      "resolution": "Replaced radiator cap and pressure-tested system",
+      "technician_notes": "System held pressure for 30 minutes after repair."
+    },
+    {
+      "work_order_id": "WO-20021",
+      "date": "2026-10-18",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CATD5-TF-5282": [
+    {
+      "work_order_id": "WO-20022",
+      "date": "2024-10-29",
+      "reported_issue": "Intermittent loss of display screen",
+      "resolution": "Reseated monitor harness and replaced corroded connector",
+      "technician_notes": "Water ingress at cab connector; dielectric grease applied."
+    },
+    {
+      "work_order_id": "WO-20023",
+      "date": "2025-09-24",
+      "reported_issue": "Coolant loss with no visible leak",
+      "resolution": "Replaced radiator cap and pressure-tested system",
+      "technician_notes": "System held pressure for 30 minutes after repair."
+    }
+  ],
+  "CATD6-SH-4559": [
+    {
+      "work_order_id": "WO-20024",
+      "date": "2025-04-07",
+      "reported_issue": "Air conditioning not cooling",
+      "resolution": "Recharged refrigerant and replaced cabin filter",
+      "technician_notes": "Pressure test found a slow leak at the compressor fitting, which was tightened."
+    },
+    {
+      "work_order_id": "WO-20025",
+      "date": "2025-06-24",
+      "reported_issue": "Track tension will not hold",
+      "resolution": "Replaced track adjuster seal kit",
+      "technician_notes": "Recoil spring inspected and found serviceable."
+    },
+    {
+      "work_order_id": "WO-20026",
+      "date": "2025-07-24",
+      "reported_issue": "Work lights inoperative",
+      "resolution": "Replaced blown fuse and repaired chafed harness",
+      "technician_notes": "Harness rubbing on cab bracket; added protective loom."
+    },
+    {
+      "work_order_id": "WO-20027",
+      "date": "2025-08-13",
+      "reported_issue": "Engine derate warning during operation",
+      "resolution": "Replaced clogged fuel filters and cleared fault history",
+      "technician_notes": "Fuel supplier quality questioned; advised keeping tank topped off overnight."
+    },
+    {
+      "work_order_id": "WO-20028",
+      "date": "2025-10-17",
+      "reported_issue": "Slow travel on left track",
+      "resolution": "Replaced travel motor case drain filter and flushed the line",
+      "technician_notes": "Metal fines found in filter; sample sent for oil analysis."
+    }
+  ],
+  "CATD8-CP-1633": [
+    {
+      "work_order_id": "WO-20029",
+      "date": "2025-07-28",
+      "reported_issue": "Alternator warning on startup",
+      "resolution": "Replaced alternator belt tensioner",
+      "technician_notes": "Charging voltage verified at 28V after repair."
+    },
+    {
+      "work_order_id": "WO-20030",
+      "date": "2025-11-02",
+      "reported_issue": "Air conditioning not cooling",
+      "resolution": "Recharged refrigerant and replaced cabin filter",
+      "technician_notes": "Pressure test found a slow leak at the compressor fitting, which was tightened."
+    },
+    {
+      "work_order_id": "WO-20031",
+      "date": "2026-04-12",
+      "reported_issue": "Blade drifts when holding grade",
+      "resolution": "Rebuilt lift valve and recalibrated blade control",
+      "technician_notes": "Grade held within tolerance on test pass."
+    }
+  ],
+  "CAT926-TC-7045": [
+    {
+      "work_order_id": "WO-20032",
+      "date": "2025-12-08",
+      "reported_issue": "Joystick response erratic",
+      "resolution": "Calibrated controls and replaced left joystick potentiometer",
+      "technician_notes": "No fault codes stored after calibration."
+    },
+    {
+      "work_order_id": "WO-20033",
+      "date": "2025-12-18",
+      "reported_issue": "Coolant loss with no visible leak",
+      "resolution": "Replaced radiator cap and pressure-tested system",
+      "technician_notes": "System held pressure for 30 minutes after repair."
+    },
+    {
+      "work_order_id": "WO-20034",
+      "date": "2026-04-01",
+      "reported_issue": "Bucket curl slow when cold",
+      "resolution": "Replaced tilt valve spool seals",
+      "technician_notes": "Response normal after warm-up cycle test."
+    }
+  ],
+  "CAT950-BH-4277": [
+    {
+      "work_order_id": "WO-20035",
+      "date": "2026-05-29",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT966-CH-4996": [
+    {
+      "work_order_id": "WO-20036",
+      "date": "2025-05-17",
+      "reported_issue": "Service brakes pulling to one side",
+      "resolution": "Replaced brake pads and bled the circuit",
+      "technician_notes": "Stopping distance verified on test run."
+    },
+    {
+      "work_order_id": "WO-20037",
+      "date": "2026-06-07",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT980-ID-4837": [
+    {
+      "work_order_id": "WO-20038",
+      "date": "2024-12-18",
+      "reported_issue": "Alternator warning on startup",
+      "resolution": "Replaced alternator belt tensioner",
+      "technician_notes": "Charging voltage verified at 28V after repair."
+    },
+    {
+      "work_order_id": "WO-20039",
+      "date": "2025-09-18",
+      "reported_issue": "Hydraulic hose weeping at cylinder",
+      "resolution": "Replaced hose and clamps",
+      "technician_notes": "Hose chafed at clamp point; rerouted to prevent recurrence."
+    },
+    {
+      "work_order_id": "WO-20040",
+      "date": "2025-09-19",
+      "reported_issue": "Intermittent loss of display screen",
+      "resolution": "Reseated monitor harness and replaced corroded connector",
+      "technician_notes": "Water ingress at cab connector; dielectric grease applied."
+    },
+    {
+      "work_order_id": "WO-20041",
+      "date": "2026-08-11",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT416-SD-4180": [
+    {
+      "work_order_id": "WO-20042",
+      "date": "2025-05-03",
+      "reported_issue": "Bucket cylinder pin loose",
+      "resolution": "Replaced pin and bushings, greased linkage",
+      "technician_notes": "Operator reminded to grease linkage at start of each shift."
+    },
+    {
+      "work_order_id": "WO-20043",
+      "date": "2025-09-27",
+      "reported_issue": "Work lights inoperative",
+      "resolution": "Replaced blown fuse and repaired chafed harness",
+      "technician_notes": "Harness rubbing on cab bracket; added protective loom."
+    },
+    {
+      "work_order_id": "WO-20044",
+      "date": "2025-11-21",
+      "reported_issue": "Black smoke at high load",
+      "resolution": "Replaced air filter elements and inspected turbo hose",
+      "technician_notes": "Turbo hose clamp was loose and has been retorqued."
+    },
+    {
+      "work_order_id": "WO-20045",
+      "date": "2026-08-21",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT420-RU-3618": [
+    {
+      "work_order_id": "WO-20046",
+      "date": "2025-01-11",
+      "reported_issue": "Alternator warning on startup",
+      "resolution": "Replaced alternator belt tensioner",
+      "technician_notes": "Charging voltage verified at 28V after repair."
+    },
+    {
+      "work_order_id": "WO-20047",
+      "date": "2025-03-09",
+      "reported_issue": "Loader arm pivot noise",
+      "resolution": "Replaced pivot bushings and shimmed joint",
+      "technician_notes": "Noise resolved; play measured within tolerance."
+    },
+    {
+      "work_order_id": "WO-20048",
+      "date": "2025-11-17",
+      "reported_issue": "Engine derate warning during operation",
+      "resolution": "Replaced clogged fuel filters and cleared fault history",
+      "technician_notes": "Fuel supplier quality questioned; advised keeping tank topped off overnight."
+    }
+  ],
+  "CAT259-LA-5837": [
+    {
+      "work_order_id": "WO-20049",
+      "date": "2025-04-15",
+      "reported_issue": "Air conditioning not cooling",
+      "resolution": "Recharged refrigerant and replaced cabin filter",
+      "technician_notes": "Pressure test found a slow leak at the compressor fitting, which was tightened."
+    },
+    {
+      "work_order_id": "WO-20050",
+      "date": "2025-07-09",
+      "reported_issue": "Hydraulic oil temperature high under load",
+      "resolution": "Cleaned oil cooler fins and replaced fan drive belt",
+      "technician_notes": "Cooler was heavily packed with debris from site dust."
+    },
+    {
+      "work_order_id": "WO-20051",
+      "date": "2025-09-04",
+      "reported_issue": "Excessive track wear on right side",
+      "resolution": "Replaced track shoes and adjusted tension",
+      "technician_notes": "Sprocket wear within limits. Recheck tension in 250 hours."
+    },
+    {
+      "work_order_id": "WO-20052",
+      "date": "2026-01-06",
+      "reported_issue": "Engine derate warning during operation",
+      "resolution": "Replaced clogged fuel filters and cleared fault history",
+      "technician_notes": "Fuel supplier quality questioned; advised keeping tank topped off overnight."
+    },
+    {
+      "work_order_id": "WO-20053",
+      "date": "2026-07-30",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT262-CP-1909": [
+    {
+      "work_order_id": "WO-20054",
+      "date": "2025-05-05",
+      "reported_issue": "Joystick response erratic",
+      "resolution": "Calibrated controls and replaced left joystick potentiometer",
+      "technician_notes": "No fault codes stored after calibration."
+    },
+    {
+      "work_order_id": "WO-20055",
+      "date": "2026-02-18",
+      "reported_issue": "Black smoke at high load",
+      "resolution": "Replaced air filter elements and inspected turbo hose",
+      "technician_notes": "Turbo hose clamp was loose and has been retorqued."
+    },
+    {
+      "work_order_id": "WO-20056",
+      "date": "2026-05-22",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT140-TC-3985": [
+    {
+      "work_order_id": "WO-20057",
+      "date": "2025-02-05",
+      "reported_issue": "Alternator warning on startup",
+      "resolution": "Replaced alternator belt tensioner",
+      "technician_notes": "Charging voltage verified at 28V after repair."
+    },
+    {
+      "work_order_id": "WO-20058",
+      "date": "2025-09-04",
+      "reported_issue": "Coolant loss with no visible leak",
+      "resolution": "Replaced radiator cap and pressure-tested system",
+      "technician_notes": "System held pressure for 30 minutes after repair."
+    },
+    {
+      "work_order_id": "WO-20059",
+      "date": "2025-10-22",
+      "reported_issue": "Excessive engine oil consumption",
+      "resolution": "Replaced valve cover gasket and crankcase breather",
+      "technician_notes": "Oil analysis normal. Recheck level weekly for one month."
+    },
+    {
+      "work_order_id": "WO-20060",
+      "date": "2025-12-02",
+      "reported_issue": "Air conditioning not cooling",
+      "resolution": "Recharged refrigerant and replaced cabin filter",
+      "technician_notes": "Pressure test found a slow leak at the compressor fitting, which was tightened."
+    },
+    {
+      "work_order_id": "WO-20061",
+      "date": "2025-12-20",
+      "reported_issue": "Work lights inoperative",
+      "resolution": "Replaced blown fuse and repaired chafed harness",
+      "technician_notes": "Harness rubbing on cab bracket; added protective loom."
+    },
+    {
+      "work_order_id": "WO-20062",
+      "date": "2026-04-06",
+      "reported_issue": "Joystick response erratic",
+      "resolution": "Calibrated controls and replaced left joystick potentiometer",
+      "technician_notes": "No fault codes stored after calibration."
+    },
+    {
+      "work_order_id": "WO-20063",
+      "date": "2026-05-03",
+      "reported_issue": "Hydraulic oil temperature high under load",
+      "resolution": "Cleaned oil cooler fins and replaced fan drive belt",
+      "technician_notes": "Cooler was heavily packed with debris from site dust."
+    },
+    {
+      "work_order_id": "WO-20064",
+      "date": "2026-05-11",
+      "reported_issue": "Engine derate warning during operation",
+      "resolution": "Replaced clogged fuel filters and cleared fault history",
+      "technician_notes": "Fuel supplier quality questioned; advised keeping tank topped off overnight."
+    }
+  ],
+  "CAT150-BH-8697": [
+    {
+      "work_order_id": "WO-20065",
+      "date": "2026-01-08",
+      "reported_issue": "Joystick response erratic",
+      "resolution": "Calibrated controls and replaced left joystick potentiometer",
+      "technician_notes": "No fault codes stored after calibration."
+    }
+  ],
+  "CAT730-CH-7588": [
+    {
+      "work_order_id": "WO-20066",
+      "date": "2025-08-06",
+      "reported_issue": "Excessive engine oil consumption",
+      "resolution": "Replaced valve cover gasket and crankcase breather",
+      "technician_notes": "Oil analysis normal. Recheck level weekly for one month."
+    },
+    {
+      "work_order_id": "WO-20067",
+      "date": "2025-12-25",
+      "reported_issue": "Coolant loss with no visible leak",
+      "resolution": "Replaced radiator cap and pressure-tested system",
+      "technician_notes": "System held pressure for 30 minutes after repair."
+    },
+    {
+      "work_order_id": "WO-20068",
+      "date": "2026-08-23",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT745-ID-2020": [
+    {
+      "work_order_id": "WO-20069",
+      "date": "2024-11-24",
+      "reported_issue": "Dump body slow to raise",
+      "resolution": "Replaced hoist valve seals",
+      "technician_notes": "Cycle time back within spec."
+    }
+  ],
+  "CATTH408-SD-6472": [
+    {
+      "work_order_id": "WO-20070",
+      "date": "2024-12-11",
+      "reported_issue": "Hydraulic hose weeping at cylinder",
+      "resolution": "Replaced hose and clamps",
+      "technician_notes": "Hose chafed at clamp point; rerouted to prevent recurrence."
+    },
+    {
+      "work_order_id": "WO-20071",
+      "date": "2025-02-21",
+      "reported_issue": "DEF system warning light on",
+      "resolution": "Replaced DEF quality sensor and purged lines",
+      "technician_notes": "DEF tank contained sediment; tank was cleaned."
+    },
+    {
+      "work_order_id": "WO-20072",
+      "date": "2025-04-07",
+      "reported_issue": "Hydraulic oil temperature high under load",
+      "resolution": "Cleaned oil cooler fins and replaced fan drive belt",
+      "technician_notes": "Cooler was heavily packed with debris from site dust."
+    },
+    {
+      "work_order_id": "WO-20073",
+      "date": "2025-07-31",
+      "reported_issue": "Coolant loss with no visible leak",
+      "resolution": "Replaced radiator cap and pressure-tested system",
+      "technician_notes": "System held pressure for 30 minutes after repair."
+    },
+    {
+      "work_order_id": "WO-20074",
+      "date": "2026-02-03",
+      "reported_issue": "Intermittent loss of display screen",
+      "resolution": "Reseated monitor harness and replaced corroded connector",
+      "technician_notes": "Water ingress at cab connector; dielectric grease applied."
+    },
+    {
+      "work_order_id": "WO-20075",
+      "date": "2026-04-01",
+      "reported_issue": "Telescopic boom jerks when extending",
+      "resolution": "Replaced boom wear pads and bled the extension cylinder",
+      "technician_notes": "Load chart checks completed after repair."
+    },
+    {
+      "work_order_id": "WO-20076",
+      "date": "2026-05-29",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT305-LA-4611": [
+    {
+      "work_order_id": "WO-20077",
+      "date": "2025-05-13",
+      "reported_issue": "Excessive track wear on right side",
+      "resolution": "Replaced track shoes and adjusted tension",
+      "technician_notes": "Sprocket wear within limits. Recheck tension in 250 hours."
+    },
+    {
+      "work_order_id": "WO-20078",
+      "date": "2025-06-24",
+      "reported_issue": "Excessive engine oil consumption",
+      "resolution": "Replaced valve cover gasket and crankcase breather",
+      "technician_notes": "Oil analysis normal. Recheck level weekly for one month."
+    },
+    {
+      "work_order_id": "WO-20079",
+      "date": "2025-12-24",
+      "reported_issue": "DEF system warning light on",
+      "resolution": "Replaced DEF quality sensor and purged lines",
+      "technician_notes": "DEF tank contained sediment; tank was cleaned."
+    },
+    {
+      "work_order_id": "WO-20080",
+      "date": "2026-04-21",
+      "reported_issue": "Slow travel on left track",
+      "resolution": "Replaced travel motor case drain filter and flushed the line",
+      "technician_notes": "Metal fines found in filter; sample sent for oil analysis."
+    },
+    {
+      "work_order_id": "WO-20081",
+      "date": "2026-06-10",
+      "reported_issue": "Boom drifts down with engine off",
+      "resolution": "Resealed boom cylinder and replaced rod seals",
+      "technician_notes": "Rod surface inspected with no scoring. Recheck drift at next PM."
+    }
+  ],
+  "CAT308-TF-2690": [
+    {
+      "work_order_id": "WO-20082",
+      "date": "2025-07-03",
+      "reported_issue": "Engine derate warning during operation",
+      "resolution": "Replaced clogged fuel filters and cleared fault history",
+      "technician_notes": "Fuel supplier quality questioned; advised keeping tank topped off overnight."
+    },
+    {
+      "work_order_id": "WO-20083",
+      "date": "2026-04-04",
+      "reported_issue": "Swing brake slow to release",
+      "resolution": "Replaced swing brake solenoid valve",
+      "technician_notes": "Pilot pressure confirmed within spec after replacement."
+    }
+  ],
+  "CAT313-SH-7836": [
+    {
+      "work_order_id": "WO-20084",
+      "date": "2025-01-09",
+      "reported_issue": "Bucket cylinder pin loose",
+      "resolution": "Replaced pin and bushings, greased linkage",
+      "technician_notes": "Operator reminded to grease linkage at start of each shift."
+    },
+    {
+      "work_order_id": "WO-20085",
+      "date": "2025-05-24",
+      "reported_issue": "Boom drifts down with engine off",
+      "resolution": "Resealed boom cylinder and replaced rod seals",
+      "technician_notes": "Rod surface inspected with no scoring. Recheck drift at next PM."
+    },
+    {
+      "work_order_id": "WO-20086",
+      "date": "2025-09-18",
+      "reported_issue": "Engine hard to start in cold weather",
+      "resolution": "Replaced glow plug relay and tested batteries",
+      "technician_notes": "One battery marginal but passed load test. Monitor."
+    },
+    {
+      "work_order_id": "WO-20087",
+      "date": "2025-11-20",
+      "reported_issue": "Coolant loss with no visible leak",
+      "resolution": "Replaced radiator cap and pressure-tested system",
+      "technician_notes": "System held pressure for 30 minutes after repair."
+    },
+    {
+      "work_order_id": "WO-20088",
+      "date": "2025-11-26",
+      "reported_issue": "Intermittent loss of display screen",
+      "resolution": "Reseated monitor harness and replaced corroded connector",
+      "technician_notes": "Water ingress at cab connector; dielectric grease applied."
+    }
+  ],
+  "CAT330-CP-9241": [
+    {
+      "work_order_id": "WO-20089",
+      "date": "2025-08-01",
+      "reported_issue": "Air conditioning not cooling",
+      "resolution": "Recharged refrigerant and replaced cabin filter",
+      "technician_notes": "Pressure test found a slow leak at the compressor fitting, which was tightened."
+    },
+    {
+      "work_order_id": "WO-20090",
+      "date": "2025-09-02",
+      "reported_issue": "Alternator warning on startup",
+      "resolution": "Replaced alternator belt tensioner",
+      "technician_notes": "Charging voltage verified at 28V after repair."
+    },
+    {
+      "work_order_id": "WO-20091",
+      "date": "2025-09-12",
+      "reported_issue": "Engine derate warning during operation",
+      "resolution": "Replaced clogged fuel filters and cleared fault history",
+      "technician_notes": "Fuel supplier quality questioned; advised keeping tank topped off overnight."
+    },
+    {
+      "work_order_id": "WO-20092",
+      "date": "2026-01-05",
+      "reported_issue": "Crack reported at boom foot",
+      "resolution": "Ground out, welded and NDT-inspected crack",
+      "technician_notes": "Dye penetrant test clear. Re-inspect at next PM."
+    },
+    {
+      "work_order_id": "WO-20093",
+      "date": "2026-01-20",
+      "reported_issue": "Joystick response erratic",
+      "resolution": "Calibrated controls and replaced left joystick potentiometer",
+      "technician_notes": "No fault codes stored after calibration."
+    },
+    {
+      "work_order_id": "WO-20094",
+      "date": "2026-06-18",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CAT349-TC-1837": [
+    {
+      "work_order_id": "WO-20095",
+      "date": "2025-01-24",
+      "reported_issue": "Swing brake slow to release",
+      "resolution": "Replaced swing brake solenoid valve",
+      "technician_notes": "Pilot pressure confirmed within spec after replacement."
+    }
+  ],
+  "CAT395-BH-3756": [
+    {
+      "work_order_id": "WO-20096",
+      "date": "2025-07-07",
+      "reported_issue": "Engine derate warning during operation",
+      "resolution": "Replaced clogged fuel filters and cleared fault history",
+      "technician_notes": "Fuel supplier quality questioned; advised keeping tank topped off overnight."
+    },
+    {
+      "work_order_id": "WO-20097",
+      "date": "2026-07-20",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CATD3-CH-8344": [
+    {
+      "work_order_id": "WO-20098",
+      "date": "2025-01-24",
+      "reported_issue": "Hydraulic hose weeping at cylinder",
+      "resolution": "Replaced hose and clamps",
+      "technician_notes": "Hose chafed at clamp point; rerouted to prevent recurrence."
+    },
+    {
+      "work_order_id": "WO-20099",
+      "date": "2025-02-18",
+      "reported_issue": "Hydraulic oil temperature high under load",
+      "resolution": "Cleaned oil cooler fins and replaced fan drive belt",
+      "technician_notes": "Cooler was heavily packed with debris from site dust."
+    },
+    {
+      "work_order_id": "WO-20100",
+      "date": "2025-03-25",
+      "reported_issue": "Blade drifts when holding grade",
+      "resolution": "Rebuilt lift valve and recalibrated blade control",
+      "technician_notes": "Grade held within tolerance on test pass."
+    },
+    {
+      "work_order_id": "WO-20101",
+      "date": "2025-05-28",
+      "reported_issue": "DEF system warning light on",
+      "resolution": "Replaced DEF quality sensor and purged lines",
+      "technician_notes": "DEF tank contained sediment; tank was cleaned."
+    },
+    {
+      "work_order_id": "WO-20102",
+      "date": "2026-07-21",
+      "reported_issue": "Intermittent loss of display screen",
+      "resolution": "Reseated monitor harness and replaced corroded connector",
+      "technician_notes": "Water ingress at cab connector; dielectric grease applied."
+    },
+    {
+      "work_order_id": "WO-20103",
+      "date": "2026-10-03",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Fluids and filters changed per schedule."
+    }
+  ],
+  "CATC9-ID-7430": [
+    {
+      "work_order_id": "WO-20104",
+      "date": "2026-05-30",
+      "reported_issue": "Annual generator service and load bank test",
+      "resolution": "Oil, filters and coolant serviced; load bank test passed",
+      "technician_notes": "Unit carried full rated load with no alarms."
+    }
+  ],
+  "CATC15-BC-8003": [
+    {
+      "work_order_id": "WO-20105",
+      "date": "2026-06-22",
+      "reported_issue": "Annual generator service and load bank test",
+      "resolution": "Oil, filters and coolant serviced; load bank test passed",
+      "technician_notes": "Unit carried full rated load with no alarms."
+    }
+  ],
+  "CATC18-SD-9892": [
+    {
+      "work_order_id": "WO-20106",
+      "date": "2026-03-25",
+      "reported_issue": "EMCP controller showing overcrank shutdown",
+      "resolution": "Replaced fuel solenoid and cleared controller fault",
+      "technician_notes": "Fuel system primed and start test repeated with no faults."
+    },
+    {
+      "work_order_id": "WO-20107",
+      "date": "2026-04-13",
+      "reported_issue": "Automatic transfer switch failed to transfer",
+      "resolution": "Replaced ATS control board and retested under load",
+      "technician_notes": "Transfer completed within spec on three consecutive tests."
+    }
+  ],
+  "CATXQ60-HR-9429": [
+    {
+      "work_order_id": "WO-20108",
+      "date": "2025-01-31",
+      "reported_issue": "Automatic transfer switch failed to transfer",
+      "resolution": "Replaced ATS control board and retested under load",
+      "technician_notes": "Transfer completed within spec on three consecutive tests."
+    },
+    {
+      "work_order_id": "WO-20109",
+      "date": "2025-05-05",
+      "reported_issue": "Low coolant temperature alarm on standby",
+      "resolution": "Replaced jacket water heater element",
+      "technician_notes": "Heater thermostat confirmed within range."
+    },
+    {
+      "work_order_id": "WO-20110",
+      "date": "2025-07-18",
+      "reported_issue": "Fuel in day tank failed quality test",
+      "resolution": "Polished stored fuel and replaced primary filters",
+      "technician_notes": "Water found in tank sample; recommend quarterly fuel testing."
+    },
+    {
+      "work_order_id": "WO-20111",
+      "date": "2025-11-20",
+      "reported_issue": "Wet stacking observed at light load",
+      "resolution": "Ran load bank test at 75 percent for two hours",
+      "technician_notes": "Unit routinely under-loaded; advised monthly load exercise."
+    }
+  ],
+  "CATXQ200-RU-6045": [
+    {
+      "work_order_id": "WO-20112",
+      "date": "2025-04-14",
+      "reported_issue": "Wet stacking observed at light load",
+      "resolution": "Ran load bank test at 75 percent for two hours",
+      "technician_notes": "Unit routinely under-loaded; advised monthly load exercise."
+    },
+    {
+      "work_order_id": "WO-20113",
+      "date": "2025-05-07",
+      "reported_issue": "Generator failed to start on utility outage",
+      "resolution": "Replaced starting batteries and tested transfer sequence",
+      "technician_notes": "Batteries were past service life. Added to annual replacement schedule."
+    },
+    {
+      "work_order_id": "WO-20114",
+      "date": "2025-10-01",
+      "reported_issue": "Oil leak at turbocharger drain line",
+      "resolution": "Replaced drain line gasket",
+      "technician_notes": "No further leakage after a 30-minute run."
+    },
+    {
+      "work_order_id": "WO-20115",
+      "date": "2025-11-06",
+      "reported_issue": "Trailer-mounted unit lost output breaker trip",
+      "resolution": "Replaced main breaker and tested trip settings",
+      "technician_notes": "Mobile unit; connections inspected after transport."
+    },
+    {
+      "work_order_id": "WO-20116",
+      "date": "2025-11-27",
+      "reported_issue": "Low coolant temperature alarm on standby",
+      "resolution": "Replaced jacket water heater element",
+      "technician_notes": "Heater thermostat confirmed within range."
+    },
+    {
+      "work_order_id": "WO-20117",
+      "date": "2026-02-03",
+      "reported_issue": "Fuel in day tank failed quality test",
+      "resolution": "Polished stored fuel and replaced primary filters",
+      "technician_notes": "Water found in tank sample; recommend quarterly fuel testing."
+    },
+    {
+      "work_order_id": "WO-20118",
+      "date": "2026-09-29",
+      "reported_issue": "Annual generator service and load bank test",
+      "resolution": "Oil, filters and coolant serviced; load bank test passed",
+      "technician_notes": "Unit carried full rated load with no alarms."
+    }
+  ],
+  "CATXQ330-TD-4331": [
+    {
+      "work_order_id": "WO-20119",
+      "date": "2025-02-08",
+      "reported_issue": "Trailer-mounted unit lost output breaker trip",
+      "resolution": "Replaced main breaker and tested trip settings",
+      "technician_notes": "Mobile unit; connections inspected after transport."
+    },
+    {
+      "work_order_id": "WO-20120",
+      "date": "2026-09-06",
+      "reported_issue": "Annual generator service and load bank test",
+      "resolution": "Oil, filters and coolant serviced; load bank test passed",
+      "technician_notes": "Unit carried full rated load with no alarms."
+    }
+  ],
+  "CATC9-LA-9443": [
+    {
+      "work_order_id": "WO-20121",
+      "date": "2025-05-02",
+      "reported_issue": "Trailer-mounted unit lost output breaker trip",
+      "resolution": "Replaced main breaker and tested trip settings",
+      "technician_notes": "Mobile unit; connections inspected after transport."
+    },
+    {
+      "work_order_id": "WO-20122",
+      "date": "2025-05-20",
+      "reported_issue": "Fuel in day tank failed quality test",
+      "resolution": "Polished stored fuel and replaced primary filters",
+      "technician_notes": "Water found in tank sample; recommend quarterly fuel testing."
+    },
+    {
+      "work_order_id": "WO-20123",
+      "date": "2025-08-06",
+      "reported_issue": "Radiator fan belt squealing on exercise run",
+      "resolution": "Replaced fan belt and adjusted tension",
+      "technician_notes": "Idler bearing inspected and found serviceable."
+    },
+    {
+      "work_order_id": "WO-20124",
+      "date": "2026-06-05",
+      "reported_issue": "Annual generator service and load bank test",
+      "resolution": "Oil, filters and coolant serviced; load bank test passed",
+      "technician_notes": "Unit carried full rated load with no alarms."
+    }
+  ],
+  "CATC18-TF-5860": [
+    {
+      "work_order_id": "WO-20125",
+      "date": "2025-03-07",
+      "reported_issue": "Radiator fan belt squealing on exercise run",
+      "resolution": "Replaced fan belt and adjusted tension",
+      "technician_notes": "Idler bearing inspected and found serviceable."
+    },
+    {
+      "work_order_id": "WO-20126",
+      "date": "2025-06-03",
+      "reported_issue": "Automatic transfer switch failed to transfer",
+      "resolution": "Replaced ATS control board and retested under load",
+      "technician_notes": "Transfer completed within spec on three consecutive tests."
+    },
+    {
+      "work_order_id": "WO-20127",
+      "date": "2025-09-10",
+      "reported_issue": "Voltage fluctuation at rated load",
+      "resolution": "Replaced automatic voltage regulator and recalibrated output",
+      "technician_notes": "Output steady across a one-hour load test."
+    }
+  ],
+  "CATXQ60-TD-4176": [
+    {
+      "work_order_id": "WO-20128",
+      "date": "2025-06-28",
+      "reported_issue": "Oil leak at turbocharger drain line",
+      "resolution": "Replaced drain line gasket",
+      "technician_notes": "No further leakage after a 30-minute run."
+    },
+    {
+      "work_order_id": "WO-20129",
+      "date": "2025-12-02",
+      "reported_issue": "Trailer-mounted unit lost output breaker trip",
+      "resolution": "Replaced main breaker and tested trip settings",
+      "technician_notes": "Mobile unit; connections inspected after transport."
+    }
+  ],
+  "CATXQ200-SH-3981": [
+    {
+      "work_order_id": "WO-20130",
+      "date": "2024-12-23",
+      "reported_issue": "Automatic transfer switch failed to transfer",
+      "resolution": "Replaced ATS control board and retested under load",
+      "technician_notes": "Transfer completed within spec on three consecutive tests."
+    },
+    {
+      "work_order_id": "WO-20131",
+      "date": "2026-02-23",
+      "reported_issue": "Wet stacking observed at light load",
+      "resolution": "Ran load bank test at 75 percent for two hours",
+      "technician_notes": "Unit routinely under-loaded; advised monthly load exercise."
+    }
+  ]
+}

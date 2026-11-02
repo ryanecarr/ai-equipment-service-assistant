@@ -1,0 +1,151 @@
+<h2 class="result-heading" tabindex="-1" #resultHeading>Assessment</h2>
+
+@if (assessment.requires_technician_review) {
+  <div class="review-banner">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>Technician review required before returning equipment to service.</span>
+  </div>
+} @else {
+  <p class="review-note">No mandatory technician review flagged for this assessment.</p>
+}
+
+<div class="identity-strip">
+  <div class="identity-main">
+    <span class="identity-model">{{ assessment.equipment_model }}</span>
+    @if (assessment.equipment_id) {
+      <span class="identity-id mono-input">{{ assessment.equipment_id }}</span>
+    }
+  </div>
+  @if (assessment.customer) {
+    <span class="identity-customer">{{ assessment.customer }}</span>
+  } @else {
+    <span class="identity-customer identity-customer--unknown">No customer on file</span>
+  }
+</div>
+
+<div class="badge-row">
+  <span class="category-chip" [class]="categoryClass">{{ assessment.category }}</span>
+  <p-tag [value]="assessment.priority" [severity]="prioritySeverity" />
+</div>
+
+<p-divider />
+
+@if (assessment.grounding_used) {
+  <div class="grounding-module grounding-module--active">
+    <i class="pi pi-database"></i>
+    <div class="grounding-body">
+      <span class="grounding-title">
+        Informed by {{ assessment.related_work_orders.length }} prior service record{{ assessment.related_work_orders.length === 1 ? '' : 's' }}
+      </span>
+      <div class="grounding-chips">
+        @for (wo of assessment.related_work_orders; track wo) {
+          <p-chip [label]="wo" class="mono-input" />
+        }
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="grounding-module">
+    <i class="pi pi-info-circle"></i>
+    <span>No prior service history available — assessment generated from reported symptoms alone.</span>
+  </div>
+}
+
+@if (assessment.match_status === 'needs_confirmation' && assessment.equipment_candidates?.length) {
+  <section class="result-section result-section--callout result-section--candidates">
+    <h3><i class="pi pi-question-circle"></i> Which machine is this?</h3>
+    <p>
+      The description didn't identify one machine, so this assessment doesn't use any service
+      history. Choose a machine to run it again with that machine's history.
+    </p>
+    <app-equipment-candidates
+      [candidates]="assessment.equipment_candidates ?? []"
+      (selected)="assessmentService.confirmEquipment($event)"
+    />
+  </section>
+}
+
+@if (assessment.comparison_notes) {
+  <section class="result-section result-section--callout result-section--comparison">
+    <h3><i class="pi pi-history"></i> Comparison to Saved History</h3>
+    <p>{{ assessment.comparison_notes }}</p>
+  </section>
+}
+
+<section class="result-section save-assessment">
+  <h3>Save This Assessment</h3>
+
+  @if (!assessment.equipment_id) {
+    <p class="section-caveat">
+      This assessment isn't linked to a known equipment ID, so it can't be saved to that
+      equipment's service history.
+    </p>
+  } @else if (assessmentService.saveStatus() === 'saved') {
+    <p-message severity="success" icon="pi pi-check-circle">
+      Saved to {{ assessment.equipment_id }}'s service history.
+    </p-message>
+  } @else {
+    <form class="save-form" [formGroup]="saveForm" (ngSubmit)="onSave()">
+      <div class="field">
+        <label for="savedBy">Saved by <span class="field-optional">(optional)</span></label>
+        <input id="savedBy" type="text" pInputText formControlName="savedBy" placeholder="Technician name" />
+      </div>
+
+      @if (assessment.related_work_orders.length) {
+        <div class="field">
+          <label id="associatedWorkOrderIdLabel" for="associatedWorkOrderId">Associate with work order <span class="field-optional">(optional)</span></label>
+          <p-select
+            inputId="associatedWorkOrderId"
+            ariaLabelledBy="associatedWorkOrderIdLabel"
+            formControlName="associatedWorkOrderId"
+            [options]="workOrderOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="None"
+            [showClear]="true"
+            styleClass="mono-input"
+          />
+        </div>
+      }
+
+      @if (assessmentService.saveStatus() === 'error' && assessmentService.saveError(); as saveErr) {
+        <p-message severity="error">{{ saveErr.message }}</p-message>
+      }
+
+      <p-button
+        type="submit"
+        label="Save Assessment"
+        icon="pi pi-save"
+        severity="secondary"
+        [loading]="assessmentService.saveStatus() === 'saving'"
+        styleClass="save-button"
+      />
+    </form>
+  }
+</section>
+
+<section class="result-section">
+  <h3>Recommended Next Steps</h3>
+  <p class="section-caveat">Preliminary guidance — follow approved manufacturer procedures and qualified technician judgment.</p>
+  <ul>
+    @for (item of assessment.recommendations; track item) {
+      <li>{{ item }}</li>
+    }
+  </ul>
+</section>
+
+@if (assessment.additional_information_needed.length) {
+  <section class="result-section result-section--callout">
+    <h3>Additional Information Needed</h3>
+    <ul>
+      @for (item of assessment.additional_information_needed; track item) {
+        <li>{{ item }}</li>
+      }
+    </ul>
+  </section>
+}
+
+<section class="result-section result-section--muted">
+  <h3>Reported Issue</h3>
+  <p>{{ assessment.reported_issue }}</p>
+</section>

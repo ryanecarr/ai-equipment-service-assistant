@@ -1,0 +1,16 @@
+{
+  "Name": "Foundry Agent Invoker (POC)",
+  "IsCustom": true,
+  "Description": "Least-privilege role for a service identity that only needs to call an existing Foundry agent via Conversations/Responses (agent_reference) — no agent creation/modification, no broader Cognitive Services data access.",
+  "Actions": [
+    "Microsoft.CognitiveServices/*/read"
+  ],
+  "NotActions": [],
+  "DataActions": [
+    "Microsoft.CognitiveServices/accounts/AIServices/agents/*"
+  ],
+  "NotDataActions": [],
+  "AssignableScopes": [
+    "/subscriptions/<subscription-id>/resourceGroups/<resource-group>"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "RoleName": "Saved Assessments Writer (POC)",
+  "Type": "CustomRole",
+  "AssignableScopes": [
+    "/dbs/equipment-service-db/colls/saved-assessments"
+  ],
+  "Permissions": [
+    {
+      "DataActions": [
+        "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+        "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/create"
+      ]
+    }
+  ]
+}

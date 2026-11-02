@@ -1,0 +1,71 @@
+<div class="intake-panel" [class.intake-panel--active]="!isLoading">
+  <div class="panel-header">
+    <h2 class="panel-title">Describe the Issue</h2>
+    <p class="panel-subtitle">Report a reported equipment symptom to generate a preliminary assessment.</p>
+  </div>
+
+  <form class="intake-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="field">
+      <label for="requestText">Reported issue</label>
+      <textarea
+        id="requestText"
+        pTextarea
+        [autoResize]="true"
+        rows="6"
+        formControlName="requestText"
+        placeholder="e.g. A CAT 320 excavator is experiencing slow hydraulic response when raising the boom..."
+        [invalid]="form.controls.requestText.invalid && form.controls.requestText.touched"
+      ></textarea>
+      @if (form.controls.requestText.invalid && form.controls.requestText.touched) {
+        <p class="field-error">Describe the reported issue before running an assessment.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="equipmentId">Equipment <span class="field-optional">(optional)</span></label>
+      <p-autocomplete
+        inputId="equipmentId"
+        formControlName="equipmentId"
+        [suggestions]="equipmentSuggestions()"
+        (completeMethod)="searchEquipment($event)"
+        [dropdown]="true"
+        [fluid]="true"
+        inputStyleClass="mono-input"
+        placeholder="Search by ID, model, customer or site"
+      >
+        <ng-template #item let-equipmentId>
+          @if (equipmentById().get(equipmentId); as equipment) {
+            <div class="equipment-option">
+              <span class="equipment-option__id mono-input">{{ equipment.equipment_id }}</span>
+              <span class="equipment-option__detail">{{ equipment.model }} · {{ equipment.customer }}</span>
+              @if (equipment.location) {
+                <span class="equipment-option__detail">{{ equipment.location }}</span>
+              }
+            </div>
+          }
+        </ng-template>
+      </p-autocomplete>
+      <p class="field-hint">Leave blank to detect it from the model and customer in your description.</p>
+    </div>
+
+    <div class="examples">
+      <span class="examples-label">Try an example</span>
+      <div class="examples-chips">
+        @for (scenario of examples; track scenario.label) {
+          <button type="button" class="example-chip" (click)="useExample(scenario)">
+            {{ scenario.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <p-button
+      type="submit"
+      label="Get Assessment"
+      icon="pi pi-send"
+      [loading]="isLoading"
+      [disabled]="form.invalid"
+      styleClass="submit-button"
+    />
+  </form>
+</div>

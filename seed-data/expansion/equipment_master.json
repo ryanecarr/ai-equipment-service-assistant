@@ -1,0 +1,452 @@
+{
+  "CAT305-TC-4041": {
+    "equipment_id": "CAT305-TC-4041",
+    "model": "CAT 305",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT30504041",
+    "customer": "Tallgrass Civil Works",
+    "hours": 7347,
+    "last_pm_date": "2026-10-10",
+    "location": "Site 2 - Wichita, KS"
+  },
+  "CAT308-BH-2465": {
+    "equipment_id": "CAT308-BH-2465",
+    "model": "CAT 308",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT30802465",
+    "customer": "Blue Heron Sitework",
+    "hours": 4314,
+    "last_pm_date": "2026-10-17",
+    "location": "Site 4 - Savannah, GA"
+  },
+  "CAT313-CH-4575": {
+    "equipment_id": "CAT313-CH-4575",
+    "model": "CAT 313",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT31304575",
+    "customer": "Cedar Hollow Paving",
+    "hours": 7444,
+    "last_pm_date": "2026-06-26",
+    "location": "Site 9 - Knoxville, TN"
+  },
+  "CAT330-ID-9225": {
+    "equipment_id": "CAT330-ID-9225",
+    "model": "CAT 330",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT33009225",
+    "customer": "Ironbark Demolition",
+    "hours": 1130,
+    "last_pm_date": "2026-05-27",
+    "location": "Site 6 - Birmingham, AL"
+  },
+  "CAT349-SD-1929": {
+    "equipment_id": "CAT349-SD-1929",
+    "model": "CAT 349",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT34901929",
+    "customer": "Saltmarsh Dredging",
+    "hours": 271,
+    "last_pm_date": "2026-09-26",
+    "location": "Site 8 - Beaufort, SC"
+  },
+  "CAT395-RU-5747": {
+    "equipment_id": "CAT395-RU-5747",
+    "model": "CAT 395",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT39505747",
+    "customer": "Redclay Utilities",
+    "hours": 5123,
+    "last_pm_date": "2026-08-31",
+    "location": "Site 3 - Macon, GA"
+  },
+  "CATD3-LA-1839": {
+    "equipment_id": "CATD3-LA-1839",
+    "model": "CAT D3",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATD301839",
+    "customer": "Longleaf Aggregates",
+    "hours": 4980,
+    "last_pm_date": "2026-10-18",
+    "location": "Site 1 - Pensacola, FL"
+  },
+  "CATD5-TF-5282": {
+    "equipment_id": "CATD5-TF-5282",
+    "model": "CAT D5",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATD505282",
+    "customer": "Three Forks Excavating",
+    "hours": 4846,
+    "last_pm_date": "2026-07-09",
+    "location": "Site 7 - Roanoke, VA"
+  },
+  "CATD6-SH-4559": {
+    "equipment_id": "CATD6-SH-4559",
+    "model": "CAT D6",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATD604559",
+    "customer": "Sandhill Drainage",
+    "hours": 2917,
+    "last_pm_date": "2026-07-11",
+    "location": "Site 2 - Fayetteville, NC"
+  },
+  "CATD8-CP-1633": {
+    "equipment_id": "CATD8-CP-1633",
+    "model": "CAT D8",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATD801633",
+    "customer": "Copperline Pipeline",
+    "hours": 9209,
+    "last_pm_date": "2026-08-26",
+    "location": "Site 14 - Shreveport, LA"
+  },
+  "CAT926-TC-7045": {
+    "equipment_id": "CAT926-TC-7045",
+    "model": "CAT 926",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT92607045",
+    "customer": "Tallgrass Civil Works",
+    "hours": 5439,
+    "last_pm_date": "2026-06-12",
+    "location": "Site 2 - Wichita, KS"
+  },
+  "CAT950-BH-4277": {
+    "equipment_id": "CAT950-BH-4277",
+    "model": "CAT 950",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT95004277",
+    "customer": "Blue Heron Sitework",
+    "hours": 635,
+    "last_pm_date": "2026-05-29",
+    "location": "Site 4 - Savannah, GA"
+  },
+  "CAT966-CH-4996": {
+    "equipment_id": "CAT966-CH-4996",
+    "model": "CAT 966",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT96604996",
+    "customer": "Cedar Hollow Paving",
+    "hours": 3848,
+    "last_pm_date": "2026-06-07",
+    "location": "Site 9 - Knoxville, TN"
+  },
+  "CAT980-ID-4837": {
+    "equipment_id": "CAT980-ID-4837",
+    "model": "CAT 980",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT98004837",
+    "customer": "Ironbark Demolition",
+    "hours": 7755,
+    "last_pm_date": "2026-08-11",
+    "location": "Site 6 - Birmingham, AL"
+  },
+  "CAT416-SD-4180": {
+    "equipment_id": "CAT416-SD-4180",
+    "model": "CAT 416",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT41604180",
+    "customer": "Saltmarsh Dredging",
+    "hours": 5813,
+    "last_pm_date": "2026-08-21",
+    "location": "Site 8 - Beaufort, SC"
+  },
+  "CAT420-RU-3618": {
+    "equipment_id": "CAT420-RU-3618",
+    "model": "CAT 420",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT42003618",
+    "customer": "Redclay Utilities",
+    "hours": 2786,
+    "last_pm_date": "2026-05-15",
+    "location": "Site 10 - Augusta, GA"
+  },
+  "CAT259-LA-5837": {
+    "equipment_id": "CAT259-LA-5837",
+    "model": "CAT 259",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT25905837",
+    "customer": "Longleaf Aggregates",
+    "hours": 5453,
+    "last_pm_date": "2026-07-30",
+    "location": "Site 1 - Pensacola, FL"
+  },
+  "CAT279-TF-1159": {
+    "equipment_id": "CAT279-TF-1159",
+    "model": "CAT 279",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT27901159",
+    "customer": "Three Forks Excavating",
+    "hours": 8434,
+    "last_pm_date": "2026-10-07",
+    "location": "Site 7 - Roanoke, VA"
+  },
+  "CAT299-SH-1368": {
+    "equipment_id": "CAT299-SH-1368",
+    "model": "CAT 299",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT29901368",
+    "customer": "Sandhill Drainage",
+    "hours": 2352,
+    "last_pm_date": "2026-08-19",
+    "location": "Site 2 - Fayetteville, NC"
+  },
+  "CAT262-CP-1909": {
+    "equipment_id": "CAT262-CP-1909",
+    "model": "CAT 262",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT26201909",
+    "customer": "Copperline Pipeline",
+    "hours": 9040,
+    "last_pm_date": "2026-05-22",
+    "location": "Site 15 - Lafayette, LA"
+  },
+  "CAT140-TC-3985": {
+    "equipment_id": "CAT140-TC-3985",
+    "model": "CAT 140",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT14003985",
+    "customer": "Tallgrass Civil Works",
+    "hours": 8387,
+    "last_pm_date": "2026-10-06",
+    "location": "Site 5 - Tulsa, OK"
+  },
+  "CAT150-BH-8697": {
+    "equipment_id": "CAT150-BH-8697",
+    "model": "CAT 150",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT15008697",
+    "customer": "Blue Heron Sitework",
+    "hours": 8356,
+    "last_pm_date": "2026-09-28",
+    "location": "Site 4 - Savannah, GA"
+  },
+  "CAT730-CH-7588": {
+    "equipment_id": "CAT730-CH-7588",
+    "model": "CAT 730",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT73007588",
+    "customer": "Cedar Hollow Paving",
+    "hours": 4824,
+    "last_pm_date": "2026-08-23",
+    "location": "Site 11 - Asheville, NC"
+  },
+  "CAT745-ID-2020": {
+    "equipment_id": "CAT745-ID-2020",
+    "model": "CAT 745",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT74502020",
+    "customer": "Ironbark Demolition",
+    "hours": 4901,
+    "last_pm_date": "2026-07-18",
+    "location": "Site 6 - Birmingham, AL"
+  },
+  "CATTH408-SD-6472": {
+    "equipment_id": "CATTH408-SD-6472",
+    "model": "CAT TH408",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATTH40806472",
+    "customer": "Saltmarsh Dredging",
+    "hours": 1374,
+    "last_pm_date": "2026-05-29",
+    "location": "Site 8 - Beaufort, SC"
+  },
+  "CATCS56-RU-6720": {
+    "equipment_id": "CATCS56-RU-6720",
+    "model": "CAT CS56",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATCS5606720",
+    "customer": "Redclay Utilities",
+    "hours": 4215,
+    "last_pm_date": "2026-10-06",
+    "location": "Site 3 - Macon, GA"
+  },
+  "CAT305-LA-4611": {
+    "equipment_id": "CAT305-LA-4611",
+    "model": "CAT 305",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT30504611",
+    "customer": "Longleaf Aggregates",
+    "hours": 612,
+    "last_pm_date": "2026-10-20",
+    "location": "Site 1 - Pensacola, FL"
+  },
+  "CAT308-TF-2690": {
+    "equipment_id": "CAT308-TF-2690",
+    "model": "CAT 308",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT30802690",
+    "customer": "Three Forks Excavating",
+    "hours": 1213,
+    "last_pm_date": "2026-05-24",
+    "location": "Site 7 - Roanoke, VA"
+  },
+  "CAT313-SH-7836": {
+    "equipment_id": "CAT313-SH-7836",
+    "model": "CAT 313",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT31307836",
+    "customer": "Sandhill Drainage",
+    "hours": 6255,
+    "last_pm_date": "2026-05-25",
+    "location": "Site 2 - Fayetteville, NC"
+  },
+  "CAT330-CP-9241": {
+    "equipment_id": "CAT330-CP-9241",
+    "model": "CAT 330",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT33009241",
+    "customer": "Copperline Pipeline",
+    "hours": 946,
+    "last_pm_date": "2026-06-18",
+    "location": "Site 14 - Shreveport, LA"
+  },
+  "CAT349-TC-1837": {
+    "equipment_id": "CAT349-TC-1837",
+    "model": "CAT 349",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT34901837",
+    "customer": "Tallgrass Civil Works",
+    "hours": 7777,
+    "last_pm_date": "2026-06-05",
+    "location": "Site 2 - Wichita, KS"
+  },
+  "CAT395-BH-3756": {
+    "equipment_id": "CAT395-BH-3756",
+    "model": "CAT 395",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT39503756",
+    "customer": "Blue Heron Sitework",
+    "hours": 2917,
+    "last_pm_date": "2026-07-20",
+    "location": "Site 4 - Savannah, GA"
+  },
+  "CATD3-CH-8344": {
+    "equipment_id": "CATD3-CH-8344",
+    "model": "CAT D3",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATD308344",
+    "customer": "Cedar Hollow Paving",
+    "hours": 8302,
+    "last_pm_date": "2026-10-03",
+    "location": "Site 11 - Asheville, NC"
+  },
+  "CATC9-ID-7430": {
+    "equipment_id": "CATC9-ID-7430",
+    "model": "CAT C9",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATC907430",
+    "customer": "Ironbark Demolition",
+    "hours": 2049,
+    "last_pm_date": "2026-05-30",
+    "location": "Site 6 - Birmingham, AL"
+  },
+  "CATC15-BC-8003": {
+    "equipment_id": "CATC15-BC-8003",
+    "model": "CAT C15",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATC1508003",
+    "customer": "Bayline Cold Storage",
+    "hours": 1056,
+    "last_pm_date": "2026-06-22",
+    "location": "Plant 2 - Tampa, FL"
+  },
+  "CATC18-SD-9892": {
+    "equipment_id": "CATC18-SD-9892",
+    "model": "CAT C18",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATC1809892",
+    "customer": "Saltmarsh Dredging",
+    "hours": 1253,
+    "last_pm_date": "2026-08-24",
+    "location": "Site 8 - Beaufort, SC"
+  },
+  "CATXQ60-HR-9429": {
+    "equipment_id": "CATXQ60-HR-9429",
+    "model": "CAT XQ60",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATXQ6009429",
+    "customer": "Harlan Ridge Medical Center",
+    "hours": 1362,
+    "last_pm_date": "2026-10-12",
+    "location": "Main Campus - Lexington, KY"
+  },
+  "CATXQ200-RU-6045": {
+    "equipment_id": "CATXQ200-RU-6045",
+    "model": "CAT XQ200",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATXQ20006045",
+    "customer": "Redclay Utilities",
+    "hours": 2314,
+    "last_pm_date": "2026-09-29",
+    "location": "Site 3 - Macon, GA"
+  },
+  "CATXQ330-TD-4331": {
+    "equipment_id": "CATXQ330-TD-4331",
+    "model": "CAT XQ330",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATXQ33004331",
+    "customer": "Tidewater Data Campus",
+    "hours": 1214,
+    "last_pm_date": "2026-09-06",
+    "location": "Building C - Norfolk, VA"
+  },
+  "CAT3512-BC-1382": {
+    "equipment_id": "CAT3512-BC-1382",
+    "model": "CAT 3512",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT351201382",
+    "customer": "Bayline Cold Storage",
+    "hours": 1665,
+    "last_pm_date": "2026-09-18",
+    "location": "Plant 2 - Tampa, FL"
+  },
+  "CATC9-LA-9443": {
+    "equipment_id": "CATC9-LA-9443",
+    "model": "CAT C9",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATC909443",
+    "customer": "Longleaf Aggregates",
+    "hours": 955,
+    "last_pm_date": "2026-06-05",
+    "location": "Site 1 - Pensacola, FL"
+  },
+  "CATC15-HR-5164": {
+    "equipment_id": "CATC15-HR-5164",
+    "model": "CAT C15",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATC1505164",
+    "customer": "Harlan Ridge Medical Center",
+    "hours": 1453,
+    "last_pm_date": "2026-05-15",
+    "location": "Main Campus - Lexington, KY"
+  },
+  "CATC18-TF-5860": {
+    "equipment_id": "CATC18-TF-5860",
+    "model": "CAT C18",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATC1805860",
+    "customer": "Three Forks Excavating",
+    "hours": 1482,
+    "last_pm_date": "2026-06-16",
+    "location": "Site 7 - Roanoke, VA"
+  },
+  "CATXQ60-TD-4176": {
+    "equipment_id": "CATXQ60-TD-4176",
+    "model": "CAT XQ60",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATXQ6004176",
+    "customer": "Tidewater Data Campus",
+    "hours": 1393,
+    "last_pm_date": "2026-07-12",
+    "location": "Building C - Norfolk, VA"
+  },
+  "CATXQ200-SH-3981": {
+    "equipment_id": "CATXQ200-SH-3981",
+    "model": "CAT XQ200",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CATXQ20003981",
+    "customer": "Sandhill Drainage",
+    "hours": 1285,
+    "last_pm_date": "2026-08-15",
+    "location": "Site 2 - Fayetteville, NC"
+  }
+}

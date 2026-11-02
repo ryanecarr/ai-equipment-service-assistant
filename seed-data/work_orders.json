@@ -1,0 +1,27 @@
+{
+  "CAT320-SE-1042": [
+    {
+      "work_order_id": "WO-10234",
+      "date": "2026-06-14",
+      "reported_issue": "Boom raises slowly under load",
+      "resolution": "Replaced main control valve O-rings; hydraulic response restored",
+      "technician_notes": "No fault codes present at time of service. Recommend monitoring filter condition."
+    },
+    {
+      "work_order_id": "WO-10590",
+      "date": "2026-09-02",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Hydraulic fluid and filter replaced; system pressure tested within spec",
+      "technician_notes": "No anomalies observed."
+    }
+  ],
+  "CAT320-NR-2207": [
+    {
+      "work_order_id": "WO-11078",
+      "date": "2026-08-20",
+      "reported_issue": "Routine preventive maintenance",
+      "resolution": "Standard service performed; no issues found",
+      "technician_notes": "Undercarriage wear within normal range."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "CAT320-SE-1042": {
+    "equipment_id": "CAT320-SE-1042",
+    "model": "CAT 320",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT0320JXKR01042",
+    "customer": "Southeast Construction",
+    "hours": 4312,
+    "last_pm_date": "2026-09-02",
+    "location": "Site 7 - Jacksonville, FL"
+  },
+  "CAT320-NR-2207": {
+    "equipment_id": "CAT320-NR-2207",
+    "model": "CAT 320",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT0320JXKR02207",
+    "customer": "Northridge Excavation",
+    "hours": 1875,
+    "last_pm_date": "2026-08-20",
+    "location": "Site 3 - Charlotte, NC"
+  },
+  "CAT336-RP-3310": {
+    "equipment_id": "CAT336-RP-3310",
+    "model": "CAT 336",
+    "manufacturer": "Caterpillar",
+    "serial_number": "CAT0336RP03310",
+    "customer": "Ridgepoint Infrastructure",
+    "hours": 975,
+    "last_pm_date": "2026-10-01",
+    "location": "Site 12 - Raleigh, NC"
+  }
+}

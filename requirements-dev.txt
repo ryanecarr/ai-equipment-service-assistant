@@ -1,0 +1,3 @@
+# Test-only dependencies — not installed in the deployed Azure Function (see
+# .funcignore, which excludes this file and the tests/ directory from deploy).
+pytest>=8.0.0

@@ -1,0 +1,53 @@
+<div
+  class="response-panel"
+  [class.response-panel--active]="assessmentService.status() !== 'idle'"
+  [attr.aria-busy]="assessmentService.status() === 'loading'"
+>
+  @switch (assessmentService.status()) {
+    @case ('idle') {
+      <div class="state-idle">
+        <i class="pi pi-wrench state-idle__icon"></i>
+        <h2 class="state-idle__title">Awaiting Technician Input</h2>
+        <p class="state-idle__hint">
+          Describe the reported issue on the left, or try an example scenario, to generate an assessment.
+        </p>
+      </div>
+    }
+
+    @case ('loading') {
+      <div class="state-loading">
+        <div class="skeleton-row">
+          <p-skeleton width="6rem" height="1.5rem" borderRadius="999px" />
+          <p-skeleton width="4.5rem" height="1.5rem" borderRadius="999px" />
+        </div>
+        <p-skeleton width="80%" height="1.25rem" styleClass="mb-2" />
+        <div class="skeleton-block">
+          <p-skeleton width="100%" height="4rem" borderRadius="6px" />
+        </div>
+        <p-skeleton width="40%" height="1rem" styleClass="mb-2" />
+        <p-skeleton width="100%" height="0.9rem" styleClass="mb-2" />
+        <p-skeleton width="95%" height="0.9rem" styleClass="mb-2" />
+        <p-skeleton width="90%" height="0.9rem" styleClass="mb-2" />
+        <p-skeleton width="70%" height="0.9rem" />
+      </div>
+    }
+
+    @case ('error') {
+      @if (assessmentService.error(); as err) {
+        <div class="state-error">
+          <h2 class="state-error__title" tabindex="-1" #errorHeading>{{ err.title }}</h2>
+          <p-message severity="error">{{ err.message }}</p-message>
+          @if (err.retryable) {
+            <p-button label="Retry" icon="pi pi-refresh" severity="secondary" (onClick)="retry()" />
+          }
+        </div>
+      }
+    }
+
+    @case ('success') {
+      @if (assessmentService.result(); as result) {
+        <app-assessment-result [assessment]="result" />
+      }
+    }
+  }
+</div>

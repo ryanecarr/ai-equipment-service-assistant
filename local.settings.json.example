@@ -1,0 +1,14 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "PROJECT_ENDPOINT": "https://<foundry-resource>.services.ai.azure.com/api/projects/<project>",
+    "AGENT_NAME": "<agent-name>",
+    "COSMOS_ENDPOINT": "https://<cosmos-account>.documents.azure.com:443/",
+    "COSMOS_DATABASE_NAME": "equipment-service-db",
+    "COSMOS_EQUIPMENT_CONTAINER": "equipment",
+    "COSMOS_WORK_ORDERS_CONTAINER": "work-orders",
+    "COSMOS_SAVED_ASSESSMENTS_CONTAINER": "saved-assessments"
+  }
+}

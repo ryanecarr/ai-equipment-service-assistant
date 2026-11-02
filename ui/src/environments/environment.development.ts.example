@@ -1,0 +1,9 @@
+// Copy this file to environment.development.ts and fill in the real function
+// key (see README "Frontend" section). environment.development.ts is
+// gitignored — it is read by `ng serve` (the "development" build config).
+export const environment = {
+  production: false,
+  apiBaseUrl: 'https://<function-app-host>/api',
+  // Use the host-level key (az functionapp keys list), which works on every route.
+  functionKey: '<paste-host-level-function-key-here>',
+};

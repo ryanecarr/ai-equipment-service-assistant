@@ -1,0 +1,36 @@
+.candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.candidate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+  color: var(--p-surface-200);
+  background: var(--p-surface-800);
+  border: 1px solid var(--p-surface-600);
+  border-radius: 6px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: border-color 120ms ease;
+
+  &:hover {
+    border-color: var(--p-primary-500);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-primary-500);
+    outline-offset: 2px;
+  }
+}
+
+.candidate__detail {
+  font-size: var(--font-size-xs);
+  color: var(--p-surface-400);
+}

@@ -1,0 +1,267 @@
+[
+  {
+    "text": "CAT 320 at Southeast Construction has a slow boom.",
+    "machine": "CAT320-SE-1042",
+    "outcome": "linked"
+  },
+  {
+    "text": "A cat d6 from Sandhill Drainage is overheating.",
+    "machine": "CATD6-SH-4559",
+    "outcome": "linked"
+  },
+  {
+    "text": "The Caterpillar 349 at Saltmarsh Dredging has a hydraulic leak.",
+    "machine": "CAT349-SD-1929",
+    "outcome": "linked"
+  },
+  {
+    "text": "CAT349 at Tallgrass Civil Works has a hydraulic leak.",
+    "machine": "CAT349-TC-1837",
+    "outcome": "linked"
+  },
+  {
+    "text": "TH408 at Saltmarsh Dredging: boom jerks when extending.",
+    "machine": "CATTH408-SD-6472",
+    "outcome": "linked"
+  },
+  {
+    "text": "XQ 330 at Tidewater Data Campus will not transfer.",
+    "machine": "CATXQ330-TD-4331",
+    "outcome": "linked"
+  },
+  {
+    "text": "C15 generator at Bayline Cold Storage failed its load test.",
+    "machine": "CATC15-BC-8003",
+    "outcome": "linked"
+  },
+  {
+    "text": "C15 at Harlan Ridge Medical Center failed its load test.",
+    "machine": "CATC15-HR-5164",
+    "outcome": "linked"
+  },
+  {
+    "text": "3512 generator at Bayline Cold Storage lost oil pressure.",
+    "machine": "CAT3512-BC-1382",
+    "outcome": "linked"
+  },
+  {
+    "text": "926 loader at Tallgrass Civil Works won't lift.",
+    "machine": "CAT926-TC-7045",
+    "outcome": "linked"
+  },
+  {
+    "text": "Harlan Ridge Medical Center's CAT XQ60 won't start.",
+    "machine": "CATXQ60-HR-9429",
+    "outcome": "linked"
+  },
+  {
+    "text": "Ridgepoint Infrastructure, Inc. reports a CAT 336 leak.",
+    "machine": "CAT336-RP-3310",
+    "outcome": "linked"
+  },
+  {
+    "text": "CS56 at Redclay Utilities: drum not vibrating.",
+    "machine": "CATCS56-RU-6720",
+    "outcome": "linked"
+  },
+  {
+    "text": "CAT395-BH-3756 has a swing problem.",
+    "machine": "CAT395-BH-3756",
+    "outcome": "linked"
+  },
+  {
+    "text": "cat950-bh-4277: loader arm noise.",
+    "machine": "CAT950-BH-4277",
+    "outcome": "linked"
+  },
+  {
+    "text": "Serial CATD801633 needs service.",
+    "machine": "CATD8-CP-1633",
+    "outcome": "linked"
+  },
+  {
+    "text": "Serial number CAT0336RP03310 is leaking.",
+    "machine": "CAT336-RP-3310",
+    "outcome": "linked"
+  },
+  {
+    "text": "Reference CATC18-TF-5860, no other details.",
+    "machine": "CATC18-TF-5860",
+    "outcome": "linked"
+  },
+  {
+    "text": "CAT 320 at Southeast Constrution has a slow boom.",
+    "machine": "CAT320-SE-1042",
+    "outcome": "linked"
+  },
+  {
+    "text": "CAT D8 at Coperline Pipeline is overheating.",
+    "machine": "CATD8-CP-1633",
+    "outcome": "linked"
+  },
+  {
+    "text": "CAT 416 at Saltmarsh Dreging has a transmission fault.",
+    "machine": "CAT416-SD-4180",
+    "outcome": "linked"
+  },
+  {
+    "text": "XQ200 at Redclay Utilites won't start.",
+    "machine": "CATXQ200-RU-6045",
+    "outcome": "linked"
+  },
+  {
+    "text": "CAT 980 at Ironbrak Demolition has a noisy loader arm.",
+    "machine": "CAT980-ID-4837",
+    "outcome": "linked"
+  },
+  {
+    "text": "CAT D5 at Three Forks Excavting has a track issue.",
+    "machine": "CATD5-TF-5282",
+    "outcome": "linked"
+  },
+  {
+    "text": "Longleef Aggregates says their CAT 259 is slow.",
+    "machine": "CAT259-LA-5837",
+    "outcome": "linked"
+  },
+  {
+    "text": "CAT 336 hydraulic leak.",
+    "machine": "CAT336-RP-3310",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "CAT XQ200 at Redclay will not start.",
+    "machine": "CATXQ200-RU-6045",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "The generator at Redclay Utilities won't start.",
+    "machine": "CATXQ200-RU-6045",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "Northridge Excavation called about their excavator.",
+    "machine": "CAT320-NR-2207",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "The D6 dozer is overheating.",
+    "machine": "CATD6-SH-4559",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "The CAT 320 has slow hydraulics.",
+    "machine": "CAT320-SE-1042",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "Bayline Cold Storage reports a generator alarm.",
+    "machine": "CATC15-BC-8003",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "CAT XQ20O at Redclay Utilities won't start.",
+    "machine": "CATXQ200-RU-6045",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "CAT 320 at Southeast Construction; Northridge Excavation called too.",
+    "machine": "CAT320-SE-1042",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "CAT320-SE-1042 and CAT320-NR-2207 both have slow booms.",
+    "machine": "CAT320-SE-1042",
+    "outcome": "confirmable"
+  },
+  {
+    "text": "A Komatsu PC200 at Southeast Construction has a track issue.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A rented skid steer at Southeast Construction lost hydraulic pressure.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A CAT D6 at Acme Paving has a track issue.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A CAT 320 at Southridge Excavation has a slow boom.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A CAT 320 at Southeast Constructors has a slow boom.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A CAT 349 at Southern Construction has a leak.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "Our new CAT 395 at Southeast Construction has a slow boom.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A CAT D6 was just delivered to Northridge Excavation.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A John Deere 350G at Southeast Construction has a leak.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A Komatsu PC200 at Gulf Harbor Marine has a track issue.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A rented skid steer is losing hydraulic pressure.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "Hydraulic pressure reads 320 psi after 140 hours.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A CAT 3200 at Acme Paving is leaking.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A CAT 321 at Southeast Construction is leaking.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "A CAT 999 at Southeast Constrution is leaking.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "Something unrelated happened.",
+    "machine": null,
+    "outcome": "correctly_unlinked"
+  },
+  {
+    "text": "The excavator at Site 7 in Jacksonville has a slow boom.",
+    "machine": "CAT320-SE-1042",
+    "outcome": "missed"
+  },
+  {
+    "text": "Southeast's excavator has a slow boom.",
+    "machine": "CAT320-SE-1042",
+    "outcome": "missed"
+  }
+]

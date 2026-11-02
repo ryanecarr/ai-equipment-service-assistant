@@ -1,0 +1,8 @@
+# azure-functions>=2.3.0 declares support for Python 3.13 and later.
+# azure-ai-projects 2.x provides the Conversations/Responses (agent_reference) API.
+azure-functions>=2.3.0
+azure-ai-projects>=2.0.0,<3.0.0
+azure-identity>=1.17.0
+azure-cosmos>=4.17.0,<5.0.0
+openai>=1.0.0
+pydantic>=2.6.0

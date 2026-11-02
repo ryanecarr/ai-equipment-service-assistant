@@ -1,0 +1,11 @@
+<div class="candidate-list">
+  @for (candidate of candidates; track candidate.equipment_id) {
+    <button type="button" class="candidate" (click)="selected.emit(candidate.equipment_id)">
+      <span class="candidate__id mono-input">{{ candidate.equipment_id }}</span>
+      <span class="candidate__detail">{{ candidate.model }} · {{ candidate.customer }}</span>
+      @if (candidate.location) {
+        <span class="candidate__detail">{{ candidate.location }}</span>
+      }
+    </button>
+  }
+</div>

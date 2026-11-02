@@ -1,0 +1,133 @@
+.intake-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  background: var(--p-surface-900);
+  border: 1px solid var(--p-surface-700);
+  border-radius: 8px;
+  padding: var(--space-6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  border-top: 3px solid transparent;
+  transition: border-top-color 150ms ease;
+
+  &--active {
+    border-top-color: var(--p-primary-500);
+  }
+}
+
+.panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.panel-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--p-surface-100);
+  margin: 0;
+}
+
+.panel-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--p-surface-400);
+  margin: 0;
+}
+
+.intake-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  label {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--p-surface-200);
+  }
+}
+
+.field-optional {
+  font-weight: 400;
+  color: var(--p-surface-500);
+}
+
+.field-hint {
+  font-size: var(--font-size-xs);
+  color: var(--p-surface-500);
+  margin: 0;
+}
+
+.field-error {
+  font-size: var(--font-size-xs);
+  color: var(--p-red-400, #f87171);
+  margin: 0;
+}
+
+.mono-input {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.examples {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.examples-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-surface-500);
+}
+
+.examples-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.example-chip {
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--p-surface-200);
+  background: var(--p-surface-800);
+  border: 1px solid var(--p-surface-600);
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease;
+
+  &:hover {
+    border-color: var(--p-primary-500);
+    color: var(--p-primary-400);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-primary-500);
+    outline-offset: 2px;
+  }
+}
+
+:host ::ng-deep .submit-button {
+  width: 100%;
+}
+
+.equipment-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.equipment-option__detail {
+  font-size: var(--font-size-xs);
+  color: var(--p-surface-400);
+}
