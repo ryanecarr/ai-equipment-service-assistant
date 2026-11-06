@@ -6,6 +6,23 @@ Foundry agent, validates the response, and returns structured JSON. A local Angu
 
 All equipment, customer and work-order data in this repo is sample data, not real records.
 
+## Screenshots
+
+The equipment picker searches the catalog by ID, model, customer or site. Here, `xq` lists the XQ
+generators.
+
+![Intake form with the equipment picker listing XQ generators](docs/screenshots/01-intake-equipment-picker.png)
+
+An assessment for a known machine. The function added the machine's two prior work orders to the
+request, and the response shows the category, priority, review flag, next steps and follow-up questions.
+
+![Assessment for CAT320-SE-1042 informed by two prior work orders](docs/screenshots/02-grounded-assessment.png)
+
+A request that names a model but not a machine. Two CAT 320s match, so the assessment uses no service
+history and offers both machines. Choosing one runs the assessment again with that machine's history.
+
+![Assessment asking which of two CAT 320 machines the request is about](docs/screenshots/03-which-machine.png)
+
 ## Architecture
 
 ```
@@ -128,6 +145,7 @@ app/
     repository.py            # saved-assessments container access
   foundry/
     client.py                # Conversations/Responses lifecycle + validate-and-retry-once
+docs/screenshots/            # README screenshots
 infra/                       # custom role definitions and the saved-assessments indexing policy
 scripts/
   migrate_grounding_to_cosmos.py  # re-runnable data import; not deployed

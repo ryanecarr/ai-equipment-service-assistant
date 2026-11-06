@@ -2,6 +2,7 @@
 .claude/
 .git*
 README.md
+docs/
 local.settings.json
 local.settings.json.example
 __pycache__/
