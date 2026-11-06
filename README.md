@@ -32,10 +32,22 @@ HTTP POST /api/assess
 request validation (Pydantic: MaintenanceRequest)
    │
    ▼
-identify the machine (explicit ID, or deterministic matching on the request text)
-   │
+identify the machine (Cosmos DB: equipment)
+   │  equipment_id supplied → point read by ID
+   │  otherwise             → read all equipment, deterministic matching on the request text
+   │  result: matched | needs_confirmation (up to 5 candidates) | no_match
    ▼
-grounding + saved history lookup (Cosmos DB)
+grounding (Cosmos DB, matched machine only)
+   │  work-orders        → every work order for the machine, in source order
+   │                       → KNOWN PRIOR RECORDS block: model, ID, customer, hours, last PM,
+   │                         and each work order's date, ID, issue, resolution and notes
+   │  saved-assessments  → the newest 5, plus a total count if there may be more
+   │                       → PREVIOUSLY SAVED ASSESSMENTS block, labelled as unverified
+   │                         AI output and trimmed to a 4,000-character budget
+   │  no matched machine → both blocks say "none found"; candidates are never sent
+   │  the machine's work order IDs are also read here, for the output checks below
+   ▼
+prompt = request text + "---" + KNOWN PRIOR RECORDS + PREVIOUSLY SAVED ASSESSMENTS
    │
    ▼
 Foundry agent call (Conversations/Responses API, agent_reference, DefaultAzureCredential)
@@ -46,6 +58,26 @@ response validation (Pydantic: MaintenanceAssessment, one retry on failure)
    ▼
 200 JSON response  (or a structured error envelope)
 ```
+
+For example, this is the full message the agent receives for a request about `CAT320-SE-1042`, a
+machine with two work orders and no saved assessments:
+
+```
+A CAT 320 excavator is experiencing slow hydraulic response when raising the boom. Customer is Southeast Construction.
+
+---
+
+KNOWN PRIOR RECORDS (from internal systems, for reference only — not manufacturer documentation):
+Equipment: CAT 320 (CAT320-SE-1042), Customer: Southeast Construction, Hours: 4312, Last PM: 2026-09-02
+Prior service history:
+- 2026-06-14 [WO-10234]: Reported "Boom raises slowly under load" — Resolution: Replaced main control valve O-rings; hydraulic response restored. Notes: No fault codes present at time of service. Recommend monitoring filter condition.
+- 2026-09-02 [WO-10590]: Reported "Routine preventive maintenance" — Resolution: Hydraulic fluid and filter replaced; system pressure tested within spec. Notes: No anomalies observed.
+
+PREVIOUSLY SAVED ASSESSMENTS: none found for this equipment in internal systems.
+```
+
+The agent's instructions (below) tell it how to treat each block. The output checks after the call
+don't rely on the agent following them.
 
 | Layer | Technology |
 |---|---|
