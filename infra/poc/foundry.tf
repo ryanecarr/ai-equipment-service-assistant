@@ -40,6 +40,13 @@ resource "azurerm_cognitive_account_project" "main" {
   identity {
     type = "SystemAssigned"
   }
+
+  lifecycle {
+    # The agent lives inside the project and is not managed by Terraform. A replacement
+    # (name, location or account change) would delete it and recreate an empty project,
+    # and a deleted project cannot be recovered.
+    prevent_destroy = true
+  }
 }
 
 resource "azurerm_cognitive_deployment" "gpt_5_mini" {
