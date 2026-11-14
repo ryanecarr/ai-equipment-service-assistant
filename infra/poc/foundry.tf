@@ -11,7 +11,8 @@ resource "azurerm_cognitive_account" "foundry" {
   custom_subdomain_name      = "foundry-equipment-ai-poc"
   project_management_enabled = true
 
-  local_auth_enabled            = true
+  # Entra ID only: with API keys off, a leaked key cannot be used to run up model charges.
+  local_auth_enabled            = false
   public_network_access_enabled = true
 
   identity {

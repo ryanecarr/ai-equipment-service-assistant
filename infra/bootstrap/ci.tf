@@ -46,10 +46,14 @@ resource "azurerm_role_definition" "ci_plan_refresh" {
   assignable_scopes = [local.poc_rg_id]
 
   permissions {
-    # Deliberately excludes every listKeys action: the plan identity must not be able to read
-    # a key that could be used to call the model or the database.
+    # No action here exposes a usable credential. The provider lists Cosmos DB keys on every
+    # refresh, but key authentication is disabled on that account, so those keys open nothing.
+    # Foundry keys are disabled too and are deliberately not listable.
     actions = [
       "Microsoft.Web/sites/config/list/action",
+      "Microsoft.DocumentDB/databaseAccounts/listKeys/action",
+      "Microsoft.DocumentDB/databaseAccounts/readonlykeys/action",
+      "Microsoft.DocumentDB/databaseAccounts/listConnectionStrings/action",
     ]
   }
 }
