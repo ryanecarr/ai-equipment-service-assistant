@@ -26,3 +26,21 @@ variable "state_admin_principal_ids" {
   type        = set(string)
   default     = []
 }
+
+variable "github_repository" {
+  description = "GitHub repository (owner/name) whose workflows may run Terraform."
+  type        = string
+  default     = "ryanecarr/ai-equipment-service-assistant"
+}
+
+variable "github_environment" {
+  description = "GitHub environment that gates terraform apply."
+  type        = string
+  default     = "poc"
+}
+
+variable "poc_resource_group_name" {
+  description = "Resource group the pipeline manages."
+  type        = string
+  default     = "rg-equipment-ai-poc"
+}
