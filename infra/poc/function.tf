@@ -14,10 +14,13 @@ resource "azurerm_function_app_flex_consumption" "main" {
   location            = local.location
   service_plan_id     = azurerm_service_plan.main.id
 
-  runtime_name           = "python"
-  runtime_version        = "3.14"
-  instance_memory_in_mb  = 2048
-  maximum_instance_count = 100
+  runtime_name          = "python"
+  runtime_version       = "3.14"
+  instance_memory_in_mb = 2048
+
+  # Cost guard for the POC. Microsoft notes that HTTP apps capped below 40 instances throttle
+  # requests once traffic exceeds capacity; that is the intended trade-off here.
+  maximum_instance_count = 5
 
   https_only                    = true
   public_network_access_enabled = true

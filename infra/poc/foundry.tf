@@ -56,8 +56,10 @@ resource "azurerm_cognitive_deployment" "gpt_5_mini" {
   }
 
   sku {
-    name     = "GlobalStandard"
-    capacity = 10
+    name = "GlobalStandard"
+
+    # Thousands of tokens per minute. Kept low as a cost guard; requests beyond it get a 429.
+    capacity = 5
   }
 
   lifecycle {
