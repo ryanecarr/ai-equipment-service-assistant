@@ -27,10 +27,10 @@ variable "state_admin_principal_ids" {
   default     = []
 }
 
-variable "github_repository" {
-  description = "GitHub repository (owner/name) whose workflows may run Terraform."
+variable "github_oidc_subject_prefix" {
+  description = "Subject prefix GitHub puts in OIDC tokens for the repository allowed to run Terraform. It carries the owner and repository IDs, so a renamed or recreated repository cannot reuse the trust. Read it with: gh api repos/<owner>/<repo>/actions/oidc/customization/sub"
   type        = string
-  default     = "ryanecarr/ai-equipment-service-assistant"
+  default     = "repo:ryanecarr@23034943/ai-equipment-service-assistant@1443015281"
 }
 
 variable "github_environment" {

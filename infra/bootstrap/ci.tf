@@ -27,8 +27,8 @@ resource "azurerm_user_assigned_identity" "ci_plan" {
 
 resource "azurerm_federated_identity_credential" "ci_plan" {
   for_each = {
-    pull-request = "repo:${var.github_repository}:pull_request"
-    main         = "repo:${var.github_repository}:ref:refs/heads/main"
+    pull-request = "${var.github_oidc_subject_prefix}:pull_request"
+    main         = "${var.github_oidc_subject_prefix}:ref:refs/heads/main"
   }
 
   name                      = "github-${each.key}"
@@ -92,7 +92,7 @@ resource "azurerm_federated_identity_credential" "ci_apply" {
   user_assigned_identity_id = azurerm_user_assigned_identity.ci_apply.id
   issuer                    = local.github_issuer
   audience                  = ["api://AzureADTokenExchange"]
-  subject                   = "repo:${var.github_repository}:environment:${var.github_environment}"
+  subject                   = "${var.github_oidc_subject_prefix}:environment:${var.github_environment}"
 }
 
 resource "azurerm_role_assignment" "ci_apply" {
