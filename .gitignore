@@ -4,3 +4,12 @@ __pycache__/
 *.pyc
 .python_packages/
 .claude/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.auto.tfvars

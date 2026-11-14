@@ -178,7 +178,7 @@ app/
   foundry/
     client.py                # Conversations/Responses lifecycle + validate-and-retry-once
 docs/screenshots/            # README screenshots
-infra/                       # custom role definitions and the saved-assessments indexing policy
+infra/                       # Terraform: bootstrap/ (state storage) and poc/ (the environment)
 scripts/
   migrate_grounding_to_cosmos.py  # re-runnable data import; not deployed
   evaluate_matching.py       # prints the matcher's scorecard
@@ -406,64 +406,58 @@ enforces this.
 
 ### Provisioning
 
-Containers are created here, never by the app or the migration script, because Entra data-plane tokens
-can't perform container operations.
+Every Azure resource is defined in Terraform under `infra/`. Change the `.tf` files and apply; don't
+change resources in the portal or with `az`, or the next apply will revert the change.
+
+| Folder | Holds | State blob |
+|---|---|---|
+| `infra/bootstrap/` | The storage account that keeps Terraform state | `bootstrap.tfstate` |
+| `infra/poc/` | The environment: Foundry, Cosmos DB, the Function App, storage, Application Insights and role assignments | `poc.tfstate` |
+
+State lives in a separate resource group, in a storage account that only accepts Entra ID sign-in. A
+blob lease locks it during each run, so two runs can't write at once.
 
 ```bash
-# Free tier can only be chosen at creation, and each subscription gets one free-tier account.
-az cosmosdb create --name <cosmos-account> --resource-group <resource-group> \
-  --locations regionName=<region> failoverPriority=0 isZoneRedundant=false \
-  --default-consistency-level Session --enable-free-tier true --disable-local-auth true
-
-# All three containers share this 400 RU/s. Don't set --throughput on the containers.
-az cosmosdb sql database create --account-name <cosmos-account> --resource-group <resource-group> \
-  --name equipment-service-db --throughput 400
-for container in equipment work-orders; do
-  az cosmosdb sql container create --account-name <cosmos-account> --resource-group <resource-group> \
-    --database-name equipment-service-db --name "$container" --partition-key-path /equipment_id
-done
-az cosmosdb sql container create --account-name <cosmos-account> --resource-group <resource-group> \
-  --database-name equipment-service-db --name saved-assessments --partition-key-path /equipment_id \
-  --idx @infra/saved-assessments-indexing-policy.json
+az login
+cd infra/poc
+cp poc.auto.tfvars.example poc.auto.tfvars   # then fill in the placeholders; the file is git-ignored
+terraform init
+terraform plan -out=poc.tfplan               # read this before applying
+terraform apply poc.tfplan
 ```
 
-`saved-assessments` leaves `assessment/*` out of its index, because nothing queries inside it.
+Terraform runs as the signed-in user, who needs Owner on the subscription and Storage Blob Data
+Contributor on the state container. `infra/bootstrap` grants the second to whoever applies it.
+
+Three things stay outside Terraform:
+
+- The Foundry agent named by `AGENT_NAME` is created inside the project, not as an Azure resource.
+- Application code is deployed with `func azure functionapp publish`; see "Deployment".
+- The Log Analytics workspace behind Application Insights is one Azure created by default; it is
+  referenced, not managed.
+
+`infra/poc/cosmos.tf` creates the containers, never the app or the migration script, because Entra
+data-plane tokens can't perform container operations. Free tier can only be chosen when a Cosmos account
+is created, and each subscription gets one free-tier account. All three containers share the database's
+400 RU/s. `saved-assessments` leaves `assessment/*` out of its index, because nothing queries inside it.
 
 ### Permissions
 
-Enable a system-assigned identity on the Function App, then assign these roles:
+`infra/poc/rbac.tf` assigns these roles. Developers are the object IDs in `developer_principal_ids`.
 
 | Identity | Role | Scope |
 |---|---|---|
-| Function App | `infra/foundry-agent-invoker-role.json` (custom Azure role) | Foundry project |
+| Function App | Foundry Agent Invoker (POC), a custom Azure role | Foundry project |
 | Function App | Cosmos DB Built-in Data Reader | `/dbs/equipment-service-db` |
-| Function App | `infra/saved-assessments-writer-role.json` (custom Cosmos role, `items/create` only) | `/dbs/equipment-service-db/colls/saved-assessments` |
+| Function App | Saved Assessments Writer (POC), a custom Cosmos role with `items/create` only | `/dbs/equipment-service-db/colls/saved-assessments` |
+| Developer | Foundry User | Foundry account and project |
+| Developer | Storage Blob Data Reader | Function App storage account |
 | Developer | Cosmos DB Built-in Data Reader | `/dbs/equipment-service-db` |
-
-Fill in the placeholders in `infra/foundry-agent-invoker-role.json` before creating that role.
-
-```bash
-az role definition create --role-definition infra/foundry-agent-invoker-role.json
-az role assignment create --assignee-object-id "<function-principal-id>" \
-  --assignee-principal-type ServicePrincipal --role "<role-id-from-previous-command>" \
-  --scope "<foundry-project-resource-id>"
-
-# Reads
-az cosmosdb sql role assignment create --account-name <cosmos-account> --resource-group <resource-group> \
-  --scope "/dbs/equipment-service-db" --principal-id "<function-principal-id>" \
-  --role-definition-id 00000000-0000-0000-0000-000000000001
-
-# Create saved assessments only
-az cosmosdb sql role definition create --account-name <cosmos-account> --resource-group <resource-group> \
-  --body @infra/saved-assessments-writer-role.json
-az cosmosdb sql role assignment create --account-name <cosmos-account> --resource-group <resource-group> \
-  --scope "/dbs/equipment-service-db/colls/saved-assessments" \
-  --principal-id "<function-principal-id>" --role-definition-id "<id-from-previous-command>"
-```
 
 The Function needs both Cosmos roles: with only Data Reader, every save returns 503. A local save also
 returns 503 until your own identity has the writer role. The migration's `--apply` needs Cosmos DB
-Built-in Data Contributor (`00000000-0000-0000-0000-000000000002`), which should be removed afterwards.
+Built-in Data Contributor (`00000000-0000-0000-0000-000000000002`). Neither of those two grants is in
+Terraform: add the one you need by hand and remove it afterwards.
 
 Live testing confirmed that a Data Reader identity's write is refused with a 403, and that the writer role
 can create documents. The writer role's other limits come from its definition and haven't been tested
@@ -528,5 +522,6 @@ curl -s -X POST http://localhost:7071/api/assess \
 func azure functionapp publish <function-app>
 ```
 
-Publishing runs a remote Oryx build against the Function App's Python version. Set the values from
-"Configuration" as Function App settings first.
+Publishing runs a remote Oryx build against the Function App's Python version. The Function App
+settings come from `infra/poc/function.tf`, so a new setting is added there and applied before the code
+that reads it is published.
