@@ -150,6 +150,11 @@ resource "azurerm_federated_identity_credential" "ci_agent_release" {
 
 # Creating an agent version and calling one (to evaluate it) are the same data action in
 # Foundry, so this role cannot be split further. It cannot delete or publish agents.
+#
+# agents/delete is left out on purpose: it would let the pipeline delete agent versions,
+# including the one the live application is pinned to. Foundry describes it as covering
+# "agents, threads, and messages", so the evaluation may not be able to delete its own
+# conversations; scripts/evaluate_agent.py tolerates that.
 resource "azurerm_role_definition" "ci_agent_release" {
   name              = "Foundry Agent Release (POC)"
   description       = "Create Foundry agent versions and call them for evaluation. No delete, no publish, no other Cognitive Services data access."
@@ -161,6 +166,9 @@ resource "azurerm_role_definition" "ci_agent_release" {
     data_actions = [
       "Microsoft.CognitiveServices/accounts/AIServices/agents/read",
       "Microsoft.CognitiveServices/accounts/AIServices/agents/write",
+      # The evaluation's rubric grader calls the model directly through the project
+      # endpoint. Write only: reading would list every response stored in the project.
+      "Microsoft.CognitiveServices/accounts/AIServices/responses/write",
     ]
   }
 }
