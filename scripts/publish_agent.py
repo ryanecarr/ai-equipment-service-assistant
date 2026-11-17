@@ -1,14 +1,19 @@
 """Writes agent_reference.json, the file that tells the application which Foundry agent
 version to call.
 
-    python -m scripts.publish_agent --reference-only --version 5
+    python -m scripts.publish_agent --reference-only --version 5    # local runs
+    python -m scripts.publish_agent --create                        # the release workflow
 
-Inputs:  the agent folder (for the agent's name), a version number, the Foundry project
-         endpoint (PROJECT_ENDPOINT, or local.settings.json) and the source commit.
+Inputs:  the agent folder, the Foundry project endpoint (PROJECT_ENDPOINT, or
+         local.settings.json) and the source commit. --reference-only also takes a version.
 Output:  agent_reference.json in the repository root, or the path given with --output.
 
 --reference-only points at a version that already exists and creates nothing in Foundry.
-Use it for local runs. Creating a new version is added with the release workflow.
+
+--create makes a new, immutable agent version from agent.yaml and instructions.md and
+points the reference at it. It runs in the release workflow, never by hand. Creating a
+version does not change what the deployed application calls: that only changes when a
+package holding the new reference is deployed.
 """
 
 import argparse
@@ -19,10 +24,19 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from azure.ai.projects import AIProjectClient
+from azure.ai.projects.models import PromptAgentDefinition
+from azure.identity import DefaultAzureCredential
 from pydantic import ValidationError
 
 from app.foundry.agent_reference import REFERENCE_PATH, AgentReference
-from scripts.agent_definition import AGENTS_DIR, REPO_ROOT, AgentDefinitionError, load_agent_definition
+from scripts.agent_definition import (
+    AGENTS_DIR,
+    REPO_ROOT,
+    AgentDefinition,
+    AgentDefinitionError,
+    load_agent_definition,
+)
 
 
 def default_agent_folder() -> Path:
@@ -46,6 +60,23 @@ def current_commit() -> str:
     return result.stdout.strip() if result.returncode == 0 else "unknown"
 
 
+def create_version(project, definition: AgentDefinition, source_commit: str) -> str:
+    """Creates one agent version in Foundry from the definition and returns its number.
+    Foundry numbers versions itself; every call makes a new one."""
+    created = project.agents.create_version(
+        agent_name=definition.name,
+        definition=PromptAgentDefinition(
+            model=definition.model,
+            instructions=definition.instructions,
+            reasoning={"effort": definition.reasoning_effort},
+            tools=definition.tools,
+        ),
+        # Shown beside the version in Foundry, so a version can be traced back to its commit.
+        metadata={"source_commit": source_commit},
+    )
+    return str(created.version)
+
+
 def write_reference(
     output: Path, project_endpoint: str, agent_name: str, agent_version: str, source_commit: str
 ) -> AgentReference:
@@ -61,26 +92,34 @@ def write_reference(
 
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--reference-only", action="store_true", help="point at an existing version; create nothing")
-    parser.add_argument("--version", help="the existing agent version to reference, for example 5")
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--reference-only", action="store_true", help="point at an existing version; create nothing")
+    mode.add_argument("--create", action="store_true", help="create a new version in Foundry (release workflow only)")
+    parser.add_argument("--version", help="with --reference-only: the existing version, for example 5")
     parser.add_argument("--agent", type=Path, help="agent folder (default: the only folder in agents/)")
     parser.add_argument("--project-endpoint", help="default: PROJECT_ENDPOINT, then local.settings.json")
     parser.add_argument("--commit", help="source commit to record (default: the current git commit)")
     parser.add_argument("--output", type=Path, default=REFERENCE_PATH)
     args = parser.parse_args(argv)
 
-    if not args.reference_only or not args.version:
-        parser.error("pass --reference-only --version <n>. Creating a version is done by the release workflow.")
+    if args.reference_only and not args.version:
+        parser.error("--reference-only needs --version <n>")
+    if args.create and args.version:
+        parser.error("--create takes no --version: Foundry numbers the new version")
 
     project_endpoint = args.project_endpoint or default_project_endpoint()
     if not project_endpoint:
         parser.error("no project endpoint: set PROJECT_ENDPOINT, fill in local.settings.json, or pass --project-endpoint")
 
+    source_commit = args.commit or current_commit()
     try:
         definition = load_agent_definition(args.agent or default_agent_folder())
-        reference = write_reference(
-            args.output, project_endpoint, definition.name, args.version, args.commit or current_commit()
-        )
+        version = args.version
+        if args.create:
+            project = AIProjectClient(endpoint=project_endpoint, credential=DefaultAzureCredential())
+            version = create_version(project, definition, source_commit)
+            print(f"Created agent {definition.name} version {version} from commit {source_commit}")
+        reference = write_reference(args.output, project_endpoint, definition.name, version, source_commit)
     except (AgentDefinitionError, ValidationError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
