@@ -15,18 +15,20 @@ application's output corrections. Blocking assertions decide the exit code. Advi
 assertions and rubric scores are reported only.
 
 Cases run one at a time because the agent shares the application's model capacity. Only
-throttling is retried, never sooner than the service asks, and every request's timeout is
-the time the run has left.
+throttling is retried, never sooner than the service asks. Every HTTP request gets the
+time the run has left at that moment as its timeout, so the run cannot outlast its limit.
 """
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -51,7 +53,10 @@ from cosmos_fakes import FakeContainer, repository_for  # noqa: E402
 
 MAX_ATTEMPTS_PER_CALL = 6
 MAX_THROTTLE_DELAY_SECONDS = 90.0
+# Used only when a throttled response carries no retry delay at all.
 DEFAULT_THROTTLE_DELAY_SECONDS = 30.0
+# Deleting an evaluation conversation gets at most this long, and less if less time is left.
+CLEANUP_TIMEOUT_SECONDS = 10.0
 
 _LIST_MARKER = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s")
 
@@ -221,32 +226,62 @@ def score(case: Case, raw: str) -> dict[str, list[dict]]:
 # --- calling Foundry ------------------------------------------------------------------------
 
 
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _delay_seconds(name: str, value: str) -> Optional[float]:
+    """One retry header as seconds from now, or None if it cannot be read."""
+    try:
+        seconds = float(value) * (0.001 if name == "retry-after-ms" else 1.0)
+    except (TypeError, ValueError):
+        if name != "retry-after":
+            return None
+        try:  # Retry-After may also be an HTTP date (RFC 9110, section 10.2.3).
+            moment = parsedate_to_datetime(value)
+        except (TypeError, ValueError):
+            return None
+        if moment.tzinfo is None:
+            moment = moment.replace(tzinfo=timezone.utc)
+        seconds = (moment - _utc_now()).total_seconds()
+    return max(seconds, 0.0) if math.isfinite(seconds) else None
+
+
 def _retry_after_seconds(exc: RateLimitError) -> Optional[float]:
-    """The wait the service asked for, or None if it did not give one this script can read."""
+    """The wait the service asked for, or None if it sent no retry delay. A delay that was
+    sent but cannot be read ends the run: guessing could retry sooner than asked."""
     headers = getattr(exc.response, "headers", None) or {}
-    for name, seconds_per_unit in (("retry-after-ms", 0.001), ("retry-after", 1.0)):
-        try:
-            return float(headers[name]) * seconds_per_unit
-        except (KeyError, TypeError, ValueError):
-            continue
+    sent = {name: headers[name] for name in ("retry-after-ms", "retry-after") if name in headers}
+    for name, value in sent.items():
+        seconds = _delay_seconds(name, value)
+        if seconds is not None:
+            return seconds
+    if sent:
+        raise RunIncomplete(f"throttled, and the service's retry delay could not be read: {sent}") from exc
     return None
 
 
 def with_throttle_retries(
-    call: Callable[[float], Any],
+    call: Callable[[Callable[[], float]], Any],
     deadline: float,
     sleep: Callable[[float], None] = time.sleep,
     clock: Callable[[], float] = time.monotonic,
 ) -> Any:
-    """Makes one call, retrying only on throttling. `call` receives the seconds left before
-    the deadline, to use as its request timeout. It never retries sooner than the service
+    """Makes one call, retrying only on throttling. `call` receives time_left(), which it
+    asks before each HTTP request for that request's timeout; time_left() raises
+    RunIncomplete once the deadline has passed. It never retries sooner than the service
     asks: a wait longer than this run allows ends the run instead."""
-    for attempt in range(1, MAX_ATTEMPTS_PER_CALL + 1):
-        seconds_left = deadline - clock()
-        if seconds_left <= 0:
+
+    def time_left() -> float:
+        seconds = deadline - clock()
+        if seconds <= 0:
             raise RunIncomplete("the time limit was reached")
+        return seconds
+
+    for attempt in range(1, MAX_ATTEMPTS_PER_CALL + 1):
+        time_left()
         try:
-            return call(seconds_left)
+            return call(time_left)
         except RateLimitError as exc:
             asked = _retry_after_seconds(exc)
             delay = DEFAULT_THROTTLE_DELAY_SECONDS if asked is None else asked
@@ -271,16 +306,22 @@ def bounded(openai_client, timeout_seconds: float):
     return openai_client.with_options(timeout=timeout_seconds, max_retries=0)
 
 
-def call_agent(openai_client, reference: AgentReference, message: str) -> str:
-    """One conversation, one response, as app/foundry/client.py does it, without the retry."""
-    conversation = openai_client.conversations.create(items=[{"type": "message", "role": "user", "content": message}])
+def call_agent(openai_client, reference: AgentReference, message: str, time_left: Callable[[], float]) -> str:
+    """One conversation, one response, as app/foundry/client.py does it, without the retry.
+    Each of the three requests gets the time left when it starts as its timeout."""
+    conversation = bounded(openai_client, time_left()).conversations.create(
+        items=[{"type": "message", "role": "user", "content": message}]
+    )
     try:
-        return _run_response(openai_client, conversation.id, reference)
+        return _run_response(bounded(openai_client, time_left()), conversation.id, reference)
     finally:
+        # The reply is already in hand and a leftover sample conversation is harmless, so
+        # cleanup never fails the call, and is skipped when the run is out of time.
         try:
-            openai_client.conversations.delete(conversation_id=conversation.id)
-        except Exception as exc:  # the reply is already in hand; a leftover conversation is harmless
-            print(f"  could not delete conversation {conversation.id}: {exc}", flush=True)
+            cleanup_timeout = min(time_left(), CLEANUP_TIMEOUT_SECONDS)
+            bounded(openai_client, cleanup_timeout).conversations.delete(conversation_id=conversation.id)
+        except Exception as exc:
+            print(f"  did not delete conversation {conversation.id}: {exc}", flush=True)
 
 
 _GRADER_PROMPT = """You are checking an AI assistant's reply against a list of criteria.
@@ -302,11 +343,11 @@ Return only a JSON array with one object per criterion, in order:
 [{{"met": true or false, "reason": "one short sentence"}}]"""
 
 
-def grade(openai_client, model: str, case: Case, raw: str) -> list[dict]:
+def grade(openai_client, model: str, case: Case, raw: str, time_left: Callable[[], float]) -> list[dict]:
     """Experimental. One direct model call judges the reply against the case's rubric."""
     criteria = "\n".join(f"{number}. {text}" for number, text in enumerate(case.rubric, start=1))
     prompt = _GRADER_PROMPT.format(message=case.message, reply=raw, criteria=criteria)
-    response = openai_client.responses.create(model=model, input=prompt)
+    response = bounded(openai_client, time_left()).responses.create(model=model, input=prompt)
     verdicts = json.loads(_strip_markdown_fence(response.output_text))
     if len(verdicts) != len(case.rubric):
         raise ValueError(f"grader returned {len(verdicts)} verdicts for {len(case.rubric)} criteria")
@@ -321,17 +362,17 @@ def grade(openai_client, model: str, case: Case, raw: str) -> list[dict]:
 
 def run_suite(
     cases: list[Case],
-    ask_agent: Callable[[str, float], str],
-    ask_grader: Optional[Callable[[Case, str, float], list[dict]]],
+    ask_agent: Callable[[str, Callable[[], float]], str],
+    ask_grader: Optional[Callable[[Case, str, Callable[[], float]], list[dict]]],
     max_seconds: float,
     sleep: Callable[[float], None] = time.sleep,
     clock: Callable[[], float] = time.monotonic,
 ) -> dict[str, Any]:
     """Runs every case in order. Returns {"result": passed | failed | incomplete, "cases": [...]}.
 
-    ask_agent(message, timeout) and ask_grader(case, raw, timeout) each get the seconds left.
-    The time limit is checked before every call and again once a case is done, so a run that
-    went over is never reported as passed."""
+    ask_agent(message, time_left) and ask_grader(case, raw, time_left) ask time_left() for
+    the timeout of each HTTP request they make. The time limit is checked before every call
+    and again once a case is done, so a run that went over is never reported as passed."""
     deadline = clock() + max_seconds
     time_limit = f"time limit of {max_seconds / 60:.0f} minutes reached"
     results: list[dict[str, Any]] = []
@@ -348,7 +389,7 @@ def run_suite(
 
         print(f"{case.name}", flush=True)
         try:
-            raw = with_throttle_retries(lambda timeout: ask_agent(case.message, timeout), deadline, sleep, clock)
+            raw = with_throttle_retries(lambda time_left: ask_agent(case.message, time_left), deadline, sleep, clock)
         except Exception as exc:
             incomplete = f"{case.name}: {exc}"
             entry["error"] = str(exc)
@@ -359,7 +400,7 @@ def run_suite(
         if case.rubric and ask_grader is not None:
             try:
                 entry["rubric"] = with_throttle_retries(
-                    lambda timeout: ask_grader(case, raw, timeout), deadline, sleep, clock
+                    lambda time_left: ask_grader(case, raw, time_left), deadline, sleep, clock
                 )
             except Exception as exc:  # advisory, so a grader problem never fails the run
                 entry["rubric"] = [{"criterion": c, "met": None, "reason": f"not scored: {exc}"} for c in case.rubric]
@@ -438,10 +479,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     with _get_project_client().get_openai_client() as openai_client:
         report = run_suite(
             cases,
-            ask_agent=lambda message, timeout: call_agent(bounded(openai_client, timeout), reference, message),
+            ask_agent=lambda message, time_left: call_agent(openai_client, reference, message, time_left),
             ask_grader=None
             if args.no_rubric
-            else lambda case, raw, timeout: grade(bounded(openai_client, timeout), definition.model, case, raw),
+            else lambda case, raw, time_left: grade(openai_client, definition.model, case, raw, time_left),
             max_seconds=args.max_minutes * 60,
         )
 

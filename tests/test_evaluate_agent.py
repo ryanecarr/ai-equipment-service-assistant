@@ -3,11 +3,13 @@ messages, each assertion passes and fails as it should, and a run blocks, passes
 stops as incomplete for the right reasons."""
 
 import json
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
 from openai import RateLimitError
 
+from app.foundry.agent_reference import AgentReference
 from scripts import evaluate_agent
 from scripts.agent_definition import AGENTS_DIR
 from scripts.evaluate_agent import Case, RunIncomplete, load_cases, run_suite, score, with_throttle_retries
@@ -56,6 +58,49 @@ class Clock:
     def sleep(self, seconds):
         self.sleeps.append(seconds)
         self.now += seconds
+
+
+REFERENCE = AgentReference(
+    project_endpoint="https://example.services.ai.azure.com/api/projects/demo",
+    agent_name="equipment-service-assistant",
+    agent_version="5",
+    source_commit="abc1234",
+)
+
+
+class TimedClient:
+    """An OpenAI client stand-in whose every request takes `seconds` on the clock, or times
+    out at the timeout it was given, whichever comes first. Records each request's timeout."""
+
+    def __init__(self, clock, seconds, requests=None, timeout=None):
+        self.clock, self.seconds, self.timeout = clock, seconds, timeout
+        self.requests = [] if requests is None else requests
+        self.conversations = SimpleNamespace(
+            create=lambda items: self._request("create", SimpleNamespace(id="conv_1")),
+            delete=lambda conversation_id: self._request("delete", None),
+        )
+        self.responses = SimpleNamespace(
+            create=lambda **kwargs: self._request("respond", SimpleNamespace(status="completed", output_text=_reply()))
+        )
+
+    def with_options(self, timeout, max_retries):
+        assert max_retries == 0
+        return TimedClient(self.clock, self.seconds, self.requests, timeout)
+
+    def _request(self, name, result):
+        self.requests.append((name, self.timeout))
+        if self.seconds > self.timeout:
+            self.clock.now += self.timeout
+            raise TimeoutError(f"{name} timed out")
+        self.clock.now += self.seconds
+        return result
+
+
+def _run_one_case_against(client, clock, max_seconds=60):
+    def ask_agent(message, time_left):
+        return evaluate_agent.call_agent(client, REFERENCE, message, time_left)
+
+    return run_suite([_case()], ask_agent, None, max_seconds=max_seconds, sleep=clock.sleep, clock=clock)
 
 
 # --- the committed cases --------------------------------------------------------------------
@@ -254,7 +299,7 @@ def test_a_missing_or_mistyped_field_fails_its_assertion_without_stopping_the_ru
 def test_a_run_passes_when_only_advisory_assertions_fail():
     case = _case(blocking={"grounding_used": True}, advisory={"category": "Engine"})
 
-    report = run_suite([case], ask_agent=lambda message, timeout: _reply(), ask_grader=None, max_seconds=60)
+    report = run_suite([case], ask_agent=lambda message, time_left: _reply(), ask_grader=None, max_seconds=60)
 
     assert report["result"] == "passed"
     assert report["cases"][0]["raw_output"] == _reply()
@@ -265,7 +310,7 @@ def test_a_run_fails_when_a_blocking_assertion_fails_and_still_runs_the_other_ca
     first = _case(name="first", blocking={"grounding_used": False})
     second = _case(name="second", blocking={"grounding_used": True})
 
-    report = run_suite([first, second], ask_agent=lambda message, timeout: _reply(), ask_grader=None, max_seconds=60)
+    report = run_suite([first, second], ask_agent=lambda message, time_left: _reply(), ask_grader=None, max_seconds=60)
 
     assert report["result"] == "failed"
     assert [entry["name"] for entry in report["cases"] if "raw_output" in entry] == ["first", "second"]
@@ -275,11 +320,11 @@ def test_the_agent_receives_the_case_message_and_rubric_scores_never_block():
     case = _case(rubric=("Does not invent a work order.",))
     sent = []
 
-    def ask_agent(message, timeout):
+    def ask_agent(message, time_left):
         sent.append(message)
         return _reply()
 
-    def ask_grader(graded_case, raw, timeout):
+    def ask_grader(graded_case, raw, time_left):
         return [{"criterion": graded_case.rubric[0], "met": False, "reason": "It did."}]
 
     report = run_suite([case], ask_agent, ask_grader, max_seconds=60)
@@ -292,10 +337,10 @@ def test_the_agent_receives_the_case_message_and_rubric_scores_never_block():
 def test_a_grader_error_is_recorded_as_not_scored():
     case = _case(rubric=("Does not invent a work order.",))
 
-    def ask_grader(graded_case, raw, timeout):
+    def ask_grader(graded_case, raw, time_left):
         raise ValueError("grader returned prose")
 
-    report = run_suite([case], lambda message, timeout: _reply(), ask_grader, max_seconds=60)
+    report = run_suite([case], lambda message, time_left: _reply(), ask_grader, max_seconds=60)
 
     assert report["result"] == "passed"
     assert report["cases"][0]["rubric"] == [
@@ -304,7 +349,7 @@ def test_a_grader_error_is_recorded_as_not_scored():
 
 
 def test_an_agent_error_makes_the_run_incomplete_and_skips_the_rest():
-    def ask_agent(message, timeout):
+    def ask_agent(message, time_left):
         raise RuntimeError("404 version not found")
 
     report = run_suite([_case(name="first"), _case(name="second")], ask_agent, None, max_seconds=60)
@@ -317,7 +362,7 @@ def test_an_agent_error_makes_the_run_incomplete_and_skips_the_rest():
 def test_the_time_limit_stops_the_run():
     clock = Clock()
 
-    def ask_agent(message, timeout):
+    def ask_agent(message, time_left):
         clock.now += 40
         return _reply()
 
@@ -332,7 +377,7 @@ def test_the_time_limit_stops_the_run():
 def test_a_case_that_finishes_after_the_time_limit_is_never_reported_as_passed():
     clock = Clock()
 
-    def ask_agent(message, timeout):
+    def ask_agent(message, time_left):
         clock.now += 120
         return _reply()
 
@@ -347,11 +392,11 @@ def test_the_grader_is_not_started_after_the_time_limit():
     clock = Clock()
     graded = []
 
-    def ask_agent(message, timeout):
+    def ask_agent(message, time_left):
         clock.now += 61
         return _reply()
 
-    def ask_grader(graded_case, raw, timeout):
+    def ask_grader(graded_case, raw, time_left):
         graded.append(graded_case.name)
         return []
 
@@ -363,17 +408,17 @@ def test_the_grader_is_not_started_after_the_time_limit():
     assert report["cases"][0]["rubric"][0]["reason"] == "not scored: the time limit was reached"
 
 
-def test_each_call_is_given_the_time_the_run_has_left():
+def test_each_call_can_ask_for_the_time_the_run_has_left():
     clock = Clock()
     timeouts = []
 
-    def ask_agent(message, timeout):
-        timeouts.append(timeout)
+    def ask_agent(message, time_left):
+        timeouts.append(time_left())
         clock.now += 10
         return _reply()
 
-    def ask_grader(graded_case, raw, timeout):
-        timeouts.append(timeout)
+    def ask_grader(graded_case, raw, time_left):
+        timeouts.append(time_left())
         clock.now += 5
         return [{"criterion": graded_case.rubric[0], "met": True, "reason": ""}]
 
@@ -382,6 +427,42 @@ def test_each_call_is_given_the_time_the_run_has_left():
 
     assert report["result"] == "passed"
     assert timeouts == [60, 50, 45, 35]
+
+
+def test_each_http_request_gets_the_time_left_when_it_starts():
+    clock = Clock()
+    client = TimedClient(clock, seconds=5)
+
+    report = _run_one_case_against(client, clock)
+
+    assert report["result"] == "passed"
+    assert client.requests == [("create", 60), ("respond", 55), ("delete", evaluate_agent.CLEANUP_TIMEOUT_SECONDS)]
+
+
+def test_slow_requests_cannot_carry_the_run_past_its_time_limit():
+    # Three 40-second requests in a 60-second run: the second is cut off at the limit and
+    # cleanup is skipped, so the run ends at 60 seconds, not 120.
+    clock = Clock()
+    client = TimedClient(clock, seconds=40)
+
+    report = _run_one_case_against(client, clock)
+
+    assert client.requests == [("create", 60), ("respond", 20)]
+    assert clock.now == 60
+    assert report["result"] == "incomplete"
+    assert report["cases"][0]["error"] == "respond timed out"
+
+
+def test_cleanup_gets_only_the_time_that_is_left_and_never_fails_the_case():
+    clock = Clock()
+    client = TimedClient(clock, seconds=27)
+
+    report = _run_one_case_against(client, clock)
+
+    assert client.requests == [("create", 60), ("respond", 33), ("delete", 6)]
+    assert clock.now == 60
+    assert report["result"] == "passed"
+    assert report["cases"][0]["raw_output"] == _reply()
 
 
 def test_the_sdk_gets_the_timeout_and_is_told_not_to_retry_by_itself():
@@ -399,7 +480,7 @@ def test_throttling_waits_as_long_as_the_service_asks_then_retries():
     clock = Clock()
     outcomes = [_throttled(retry_after=7), _throttled(retry_after=90), _throttled(), "reply"]
 
-    def call(timeout):
+    def call(time_left):
         outcome = outcomes.pop(0)
         if isinstance(outcome, Exception):
             raise outcome
@@ -409,29 +490,64 @@ def test_throttling_waits_as_long_as_the_service_asks_then_retries():
     assert clock.sleeps == [7, 90, evaluate_agent.DEFAULT_THROTTLE_DELAY_SECONDS]
 
 
-def test_a_delay_given_in_milliseconds_is_honored_and_an_unreadable_one_uses_the_default():
-    clock = Clock()
-    outcomes = [
-        _throttled(headers={"retry-after-ms": "2500", "retry-after": "3"}),
-        _throttled(headers={"retry-after": "Wed, 18 Nov 2026 07:28:00 GMT"}),
-        "reply",
-    ]
+NOW = datetime(2026, 11, 18, 7, 23, 0, tzinfo=timezone.utc)
 
-    def call(timeout):
+
+def _retry_through(monkeypatch, *headers):
+    """Throttles once per set of headers, then replies. Returns the clock that slept."""
+    monkeypatch.setattr(evaluate_agent, "_utc_now", lambda: NOW)
+    clock = Clock()
+    outcomes = [_throttled(headers=header) for header in headers] + ["reply"]
+
+    def call(time_left):
         outcome = outcomes.pop(0)
         if isinstance(outcome, Exception):
             raise outcome
         return outcome
 
     assert with_throttle_retries(call, deadline=1000, sleep=clock.sleep, clock=clock) == "reply"
-    assert clock.sleeps == [2.5, evaluate_agent.DEFAULT_THROTTLE_DELAY_SECONDS]
+    return clock
+
+
+def test_a_delay_in_milliseconds_or_as_an_http_date_is_honored(monkeypatch):
+    clock = _retry_through(
+        monkeypatch,
+        {"retry-after-ms": "2500", "retry-after": "3"},
+        {"retry-after": "Wed, 18 Nov 2026 07:23:20 GMT"},  # 20 seconds after NOW
+        {"retry-after": "Wed, 18 Nov 2026 07:00:00 GMT"},  # already past
+        {"retry-after-ms": "soon", "retry-after": "4"},  # the readable one is used
+    )
+
+    assert clock.sleeps == [2.5, 20, 0, 4]
+
+
+def test_an_http_date_further_ahead_than_the_run_allows_ends_the_run(monkeypatch):
+    with pytest.raises(RunIncomplete, match="asked for a 300s wait"):
+        _retry_through(monkeypatch, {"retry-after": "Wed, 18 Nov 2026 07:28:00 GMT"})
+
+
+@pytest.mark.parametrize("value", ["soon", "", "nan", "inf", "Wed, 99 Nov 2026 07:28:00 GMT"])
+def test_a_delay_that_was_sent_but_cannot_be_read_ends_the_run_without_retrying(monkeypatch, value):
+    monkeypatch.setattr(evaluate_agent, "_utc_now", lambda: NOW)
+    clock = Clock()
+    calls = []
+
+    def call(time_left):
+        calls.append(1)
+        raise _throttled(headers={"retry-after": value})
+
+    with pytest.raises(RunIncomplete, match="retry delay could not be read"):
+        with_throttle_retries(call, deadline=1000, sleep=clock.sleep, clock=clock)
+
+    assert len(calls) == 1
+    assert clock.sleeps == []
 
 
 def test_a_wait_longer_than_the_run_allows_ends_the_run_instead_of_retrying_early():
     clock = Clock()
     calls = []
 
-    def call(timeout):
+    def call(time_left):
         calls.append(1)
         raise _throttled(retry_after=500)
 
@@ -446,7 +562,7 @@ def test_throttling_gives_up_after_the_attempt_limit():
     clock = Clock()
     calls = []
 
-    def call(timeout):
+    def call(time_left):
         calls.append(1)
         raise _throttled(retry_after=1)
 
@@ -459,7 +575,7 @@ def test_throttling_gives_up_after_the_attempt_limit():
 def test_throttling_does_not_wait_past_the_time_limit():
     clock = Clock()
 
-    def call(timeout):
+    def call(time_left):
         raise _throttled(retry_after=60)
 
     with pytest.raises(RunIncomplete, match="time limit"):
@@ -471,7 +587,7 @@ def test_throttling_does_not_wait_past_the_time_limit():
 def test_only_throttling_is_retried():
     calls = []
 
-    def call(timeout):
+    def call(time_left):
         calls.append(1)
         raise RuntimeError("boom")
 

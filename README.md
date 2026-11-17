@@ -240,10 +240,12 @@ An assertion is `blocking` only if the current agent version passes it reliably.
 exception: it blocks in every case and cannot be moved to advisory.
 
 Exit code 2 means the run could not finish, and it is never reported as passed: an error, the 30-minute
-limit, throttling past six attempts, or the service asking for a wait longer than 90 seconds. Only
-throttling is retried, and never sooner than the service asks. The time limit is checked before every call
-and after every case, and each request's timeout is the time the run has left. Cases run one at a time
-because the agent shares the application's model capacity; a full run takes about three minutes.
+limit, throttling past six attempts, or the service asking for a wait that is longer than 90 seconds or
+that the script cannot read. Only throttling is retried, and never sooner than the service asks, whether
+it gives the delay in seconds, milliseconds or as a date. The time limit is checked before every call and
+after every case, and every HTTP request's timeout is the time the run has left when that request starts.
+Deleting a case's conversation gets at most 10 seconds and is skipped when no time is left. Cases run one
+at a time because the agent shares the application's model capacity; a full run takes about three minutes.
 
 Two known gaps in version 5 are written down in the case's `expect.yaml`, each with a comment:
 
