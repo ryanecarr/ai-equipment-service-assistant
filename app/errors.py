@@ -21,6 +21,11 @@ class InvalidRequestError(AppError):
     code = "invalid_request"
 
 
+class AgentReferenceError(AppError):
+    status_code = 500
+    code = "agent_reference_invalid"
+
+
 class FoundryCallError(AppError):
     status_code = 502
     code = "upstream_agent_error"

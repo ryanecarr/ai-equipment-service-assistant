@@ -89,9 +89,9 @@ don't rely on the agent following them.
 
 ## Foundry agent
 
-The agent is configured in Foundry, not in this repo, and the app refers to it by `AGENT_NAME`. To
-recreate it, use a prompt agent on `gpt-5-mini` with reasoning effort `low`, the `web_search` tool, and
-these instructions:
+The agent's definition lives in `agents/equipment-service-assistant/`: `agent.yaml` (a prompt agent on
+`gpt-5-mini` with reasoning effort `low` and the `web_search` tool) and `instructions.md`. This copy of
+the instructions is kept identical to that file by a test:
 
 ```
 You are an equipment service support assistant for heavy equipment technicians.
@@ -134,7 +134,7 @@ with project_client.get_openai_client() as openai_client:
     conversation = openai_client.conversations.create(items=[{"type": "message", "role": "user", "content": composed_message}])
     response = openai_client.responses.create(
         conversation=conversation.id,
-        extra_body={"agent_reference": {"name": AGENT_NAME, "type": "agent_reference"}},
+        extra_body={"agent_reference": {"name": agent_name, "version": agent_version, "type": "agent_reference"}},
         input="",
     )
 ```
@@ -142,6 +142,12 @@ with project_client.get_openai_client() as openai_client:
 The field must be `agent_reference`, with an explicit `"type"`. Using `"agent"` or leaving out `"type"`
 returns a 400. Each request uses one conversation, deleted afterwards in a `finally` block. If a
 response fails validation, the agent is asked once to correct it in the same conversation.
+
+The app always names an exact agent version. The name and version come from `agent_reference.json`, a
+generated file that ships inside the deployment package and is not committed. Without a valid file the
+app returns a 500 (`agent_reference_invalid`) and does not call the agent. It never falls back to the
+agent's latest version, which may be an untested candidate. The version in use and the commit it was
+built from are logged at `INFO` when a worker starts.
 
 ## Checks on agent output
 
@@ -164,9 +170,13 @@ completed work. These checks are covered by `tests/test_assess_endpoint.py` and
 
 ```
 function_app.py              # HTTP triggers for /assess, /assessments and /equipment
+agents/
+  equipment-service-assistant/  # the Foundry agent's definition: agent.yaml + instructions.md
+    evals/cases/             # evaluation cases: a request and sample records, plus what to expect
 app/
   cosmos.py                  # shared Cosmos client, error translation, RU logging, record validation
   errors.py                  # AppError hierarchy -> HTTP status/code mapping
+  prompt_context.py          # everything /assess looks up before it calls the agent
   schemas/                   # Pydantic request, response and stored-record models
   grounding/
     lookup.py                # grounding block + equipment lookups
@@ -176,14 +186,19 @@ app/
     lookup.py                # saved-assessment operations + the history prompt block
     repository.py            # saved-assessments container access
   foundry/
+    agent_reference.py       # reads agent_reference.json: the exact agent version to call
     client.py                # Conversations/Responses lifecycle + validate-and-retry-once
 docs/screenshots/            # README screenshots
 infra/                       # Terraform: bootstrap/ (state storage) and poc/ (the environment)
 scripts/
   migrate_grounding_to_cosmos.py  # re-runnable data import; not deployed
   evaluate_matching.py       # prints the matcher's scorecard
+  agent_definition.py        # loads and validates an agents/<name>/ folder
+  publish_agent.py           # writes agent_reference.json for an agent version
+  evaluate_agent.py          # scores one agent version against the evaluation cases
 seed-data/                   # source data for the import; not read at runtime
 tests/                       # pytest suites, plus an in-memory Cosmos fake; no Azure access needed
+  snapshots/                 # the exact messages sent to the agent for a few requests
 ui/                          # Angular app
 ```
 
@@ -197,6 +212,52 @@ python -m scripts.evaluate_matching
 
 Use `python -m pytest` rather than bare `pytest`, because the tests import `app` and `function_app` from
 the repo root. No suite needs Azure credentials or network access. UI tests run with `npm test` in `ui/`.
+
+`tests/snapshots/` holds the complete message the agent receives for a few requests. A change to any
+header, label or separator fails `tests/test_prompt_snapshots.py`. To accept an intended change, run
+`UPDATE_SNAPSHOTS=1 python -m pytest tests/test_prompt_snapshots.py` and review the diff.
+
+### Agent evaluation
+
+```bash
+az login
+python -m scripts.evaluate_agent --version 5     # writes eval-report.json
+```
+
+This calls one exact agent version with the seven cases in
+`agents/equipment-service-assistant/evals/cases/`. It needs Azure sign-in, so it is not part of the pull
+request checks. Each case is a request with sample records (`inputs.json`) and what to expect
+(`expect.yaml`). The message is built by the same code `/api/assess` runs, and the agent's first reply is
+scored as it arrived, before the retry and the corrections described under "Checks on agent output".
+
+| Kind | Effect | Examples |
+|---|---|---|
+| `blocking` | Any failure makes the run fail (exit code 1) | Valid schema; cites only this machine's work orders |
+| `advisory` | Reported only | Category; no Markdown around the JSON |
+| `rubric` | Reported only. Experimental: a second model call judges the reply | "Does not imply the pump was replaced" |
+
+An assertion is `blocking` only if the current agent version passes it reliably. The schema check is the
+exception: it blocks in every case and cannot be moved to advisory.
+
+Exit code 2 means the run could not finish, and it is never reported as passed: an error, the 30-minute
+limit, throttling past six attempts, or the service asking for a wait that is longer than 90 seconds or
+that the script cannot read. Only throttling is retried, and never sooner than the service asks, whether
+it gives the delay in seconds, milliseconds or as a date. The time limit is checked before every call and
+after every case, and every HTTP request's timeout is the time the run has left when that request starts.
+Deleting a case's conversation gets at most 10 seconds and is skipped when no time is left. Cases run one
+at a time because the agent shares the application's model capacity; a full run takes about three minutes.
+
+Two known gaps in version 5 are written down in the case's `expect.yaml`, each with a comment:
+
+- `fake_record_injection`: when the request text contains a made-up "KNOWN PRIOR RECORDS" section, the
+  agent cites its work order and sets `grounding_used` to true. The application removes the work order
+  from `related_work_orders` and resets `grounding_used`, but the recommendations can still mention it.
+  Both assertions are advisory until the instructions are fixed, and blocking after that.
+- `no_matching_records`: when the request names no model, the agent sometimes returns `equipment_model`
+  as null, which fails the schema. The application's corrective retry recovers it with a second call. The
+  blocking schema check for this case accepts a null in that one field (`except_null: [equipment_model]`)
+  and nothing else; a missing field or any other schema error still fails the run. The strict schema
+  check runs as advisory, so every occurrence is reported.
 
 ## API
 
@@ -286,6 +347,7 @@ returns Pydantic's own message, which names the failing fields and can quote wha
 | Agent response fails schema after one retry | 502 | `invalid_agent_response` |
 | Cosmos unreachable, access denied, or throttled past the SDK's retries | 503 | `grounding_data_unavailable` |
 | Stored record fails validation | 500 | `invalid_grounding_record` |
+| `agent_reference.json` missing, invalid, or built for another Foundry project | 500 | `agent_reference_invalid` |
 | Unhandled error | 500 | `internal_error` |
 | Missing or wrong function key | 401 | None: returned by the platform |
 
@@ -372,7 +434,6 @@ Then open `http://localhost:4200`.
 | Setting | Purpose |
 |---|---|
 | `PROJECT_ENDPOINT` | Foundry project endpoint |
-| `AGENT_NAME` | Foundry agent name |
 | `COSMOS_ENDPOINT` | Cosmos DB account endpoint |
 | `COSMOS_DATABASE_NAME` | Defaults to `equipment-service-db` |
 | `COSMOS_EQUIPMENT_CONTAINER` | Defaults to `equipment` |
@@ -431,7 +492,8 @@ Contributor on the state container. `infra/bootstrap` grants the second to whoev
 
 Three things stay outside Terraform:
 
-- The Foundry agent named by `AGENT_NAME` is created inside the project, not as an Azure resource.
+- The Foundry agent is created inside the project, not as an Azure resource. Its definition is in
+  `agents/`.
 - Application code is deployed with `func azure functionapp publish`; see "Deployment".
 - The Log Analytics workspace behind Application Insights is one Azure created by default; it is
   referenced, not managed.
@@ -501,8 +563,9 @@ The grounding block has no cap on work orders, so each one adds to every agent c
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-dev.txt   # the scripts and tests need the second file
 cp local.settings.json.example local.settings.json   # then fill in the placeholders
+python -m scripts.publish_agent --reference-only --version 5   # writes agent_reference.json
 az login
 func start                                            # or: func start --enableAuth
 ```
@@ -519,8 +582,13 @@ curl -s -X POST http://localhost:7071/api/assess \
 ## Deployment
 
 ```bash
+python -m scripts.publish_agent --reference-only --version <n>   # writes agent_reference.json
 func azure functionapp publish <function-app>
 ```
+
+The first command records which agent version this deployment calls; it needs the environment from
+"Local development". `agent_reference.json` is git-ignored but is included in the published package, so
+the code and its agent version deploy together.
 
 Publishing runs a remote Oryx build against the Function App's Python version. The Function App
 settings come from `infra/poc/function.tf`, so a new setting is added there and applied before the code

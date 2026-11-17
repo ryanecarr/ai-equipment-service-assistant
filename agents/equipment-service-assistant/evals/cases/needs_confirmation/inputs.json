@@ -1,0 +1,7 @@
+{
+  "description": "A request that names only a model. Two machines share it, so none is linked and no records are sent.",
+  "request": {
+    "request_text": "A CAT 320 excavator has slow hydraulic response when raising the boom."
+  },
+  "match_status": "needs_confirmation"
+}

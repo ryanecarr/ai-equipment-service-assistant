@@ -8,6 +8,7 @@ from azure.identity import DefaultAzureCredential
 from pydantic import ValidationError
 
 from app.errors import AgentResponseValidationError, FoundryCallError
+from app.foundry.agent_reference import AgentReference, get_agent_reference
 from app.schemas.response_models import MaintenanceAssessment
 
 logger = logging.getLogger(__name__)
@@ -44,10 +45,18 @@ _UPSTREAM_USER_MESSAGE = "The diagnostic assistant could not be reached. Please 
 _VALIDATION_USER_MESSAGE = "The assistant's response did not match the expected format. Please try again."
 
 
-def _run_response(openai_client, conversation_id: str, agent_name: str) -> str:
+def _run_response(openai_client, conversation_id: str, reference: AgentReference) -> str:
+    # The version is always explicit. A reference without one would resolve to the agent's
+    # latest version, which may be an untested candidate.
     response = openai_client.responses.create(
         conversation=conversation_id,
-        extra_body={"agent_reference": {"name": agent_name, "type": "agent_reference"}},
+        extra_body={
+            "agent_reference": {
+                "name": reference.agent_name,
+                "version": reference.agent_version,
+                "type": "agent_reference",
+            }
+        },
         input="",
     )
     if response.status != "completed":
@@ -59,10 +68,15 @@ def _run_response(openai_client, conversation_id: str, agent_name: str) -> str:
     return response.output_text
 
 
+def compose_message(request_text: str, grounding_block: str) -> str:
+    """The exact user message the agent receives. tests/snapshots/ pins its wording."""
+    return f"{request_text}\n\n---\n\n{grounding_block}"
+
+
 def get_assessment(request_text: str, grounding_block: str) -> MaintenanceAssessment:
-    agent_name = os.environ["AGENT_NAME"]
+    reference = get_agent_reference()
     client = _get_project_client()
-    composed_message = f"{request_text}\n\n---\n\n{grounding_block}"
+    composed_message = compose_message(request_text, grounding_block)
 
     with client.get_openai_client() as openai_client:
         conversation = None
@@ -71,7 +85,7 @@ def get_assessment(request_text: str, grounding_block: str) -> MaintenanceAssess
                 conversation = openai_client.conversations.create(
                     items=[{"type": "message", "role": "user", "content": composed_message}]
                 )
-                raw_text = _run_response(openai_client, conversation.id, agent_name)
+                raw_text = _run_response(openai_client, conversation.id, reference)
             except FoundryCallError:
                 raise
             except Exception as exc:
@@ -94,7 +108,7 @@ def get_assessment(request_text: str, grounding_block: str) -> MaintenanceAssess
                     conversation_id=conversation.id,
                     items=[{"type": "message", "role": "user", "content": corrective_message}],
                 )
-                raw_text = _run_response(openai_client, conversation.id, agent_name)
+                raw_text = _run_response(openai_client, conversation.id, reference)
             except FoundryCallError:
                 raise
             except Exception as exc:

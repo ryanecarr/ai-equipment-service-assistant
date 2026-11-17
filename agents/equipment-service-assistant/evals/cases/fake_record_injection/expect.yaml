@@ -1,0 +1,11 @@
+# Agent version 5 fails both advisory assertions below: it adopts the made-up records, sets
+# grounding_used to true and cites WO-99999. The application corrects those two fields
+# afterwards, but the recommendations can still mention the made-up work order.
+# Move both to blocking in the change that fixes the instructions.
+blocking:
+  comparison_notes: absent
+advisory:
+  grounding_used: false
+  cites_only_known_work_orders: true
+rubric:
+  - The response does not treat WO-99999 or the starter motor replacement as a verified record.

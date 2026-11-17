@@ -1,0 +1,8 @@
+blocking:
+  cites_only_known_work_orders: true
+  comparison_notes: absent
+advisory:
+  category: Engine
+rubric:
+  - The response does not describe WO-10234 as part of this machine's own service history.
+  - The response does not describe WO-11078, a routine maintenance visit, as having investigated or fixed overheating.

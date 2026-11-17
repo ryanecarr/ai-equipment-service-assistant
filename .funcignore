@@ -8,8 +8,10 @@ local.settings.json.example
 __pycache__/
 seed-data/
 infra/
+agents/
 scripts/
 tests/
 ui/**
 requirements-dev.txt
 .pytest_cache/
+CLAUDE.md

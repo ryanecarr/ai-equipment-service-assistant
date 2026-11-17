@@ -12,6 +12,7 @@ from azure.cosmos.exceptions import CosmosHttpResponseError
 import app.grounding.lookup as grounding_mod
 import app.grounding.repository as repository_mod
 import app.history.lookup as history_mod
+import app.prompt_context as prompt_context_mod
 import function_app
 from app.errors import FoundryCallError, GroundingDataUnavailableError
 from app.grounding.repository import EquipmentRepository
@@ -152,7 +153,7 @@ def test_failure_on_the_known_work_order_lookup_still_uses_the_error_envelope(mo
     def failing_lookup(equipment_id):
         raise GroundingDataUnavailableError("query failed", user_message="unavailable")
 
-    monkeypatch.setattr(function_app, "get_known_work_order_ids", failing_lookup)
+    monkeypatch.setattr(prompt_context_mod, "get_known_work_order_ids", failing_lookup)
 
     response = _post_assess({"request_text": "Broken.", "equipment_id": "CAT-A"})
 

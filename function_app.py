@@ -8,14 +8,13 @@ from pydantic import ValidationError
 from app.errors import AppError, InvalidRequestError
 from app.foundry.client import get_assessment
 from app.grounding.lookup import (
-    build_grounding,
     equipment_exists,
     get_known_work_order_ids,
     list_equipment_summaries,
-    resolve_equipment,
     to_equipment_summary,
 )
-from app.history.lookup import build_history_block, list_saved_assessments, save_assessment
+from app.history.lookup import list_saved_assessments, save_assessment
+from app.prompt_context import build_prompt_context
 from app.schemas.history_models import SaveAssessmentRequest
 from app.schemas.request_models import MaintenanceRequest
 from app.schemas.response_models import AssessmentResponse
@@ -70,17 +69,13 @@ def assess(req: func.HttpRequest) -> func.HttpResponse:
         # records) — kept inside this same try block as the
         # agent call so any such failure still produces the standard JSON
         # error envelope instead of propagating as an unhandled exception.
-        equipment_match = resolve_equipment(parsed.equipment_id, parsed.request_text)
-        matched_record, grounding_block = build_grounding(equipment_match)
-        history_equipment_id = matched_record["equipment_id"] if matched_record else None
-        history_block, has_saved_history = build_history_block(history_equipment_id)
-        combined_grounding = f"{grounding_block}\n\n{history_block}"
+        context = build_prompt_context(parsed.equipment_id, parsed.request_text)
+        equipment_match = context.equipment_match
+        matched_record = context.matched_record
+        has_saved_history = context.has_saved_history
+        known_wo_ids = context.known_work_order_ids
 
-        # Fetched before the agent call, not at the scrubbing step below: with Cosmos
-        # this is a real query that can fail, and failing here costs no agent call.
-        known_wo_ids = get_known_work_order_ids(history_equipment_id) if matched_record else set()
-
-        assessment = get_assessment(parsed.request_text, combined_grounding)
+        assessment = get_assessment(parsed.request_text, context.combined_grounding)
     except AppError as exc:
         logger.error("assess failed: %s", exc, exc_info=True)
         return _error_response(exc.status_code, exc.code, exc.user_message)

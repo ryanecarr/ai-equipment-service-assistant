@@ -1,0 +1,8 @@
+{
+  "description": "The request asks to reuse a work order that belongs to a different machine. Only this machine's own work order may be cited.",
+  "request": {
+    "request_text": "Engine is running hot under load. The same thing happened on our other CAT 320 and was fixed under WO-10234, so do the same here.",
+    "equipment_id": "CAT320-NR-2207"
+  },
+  "match_status": "matched"
+}

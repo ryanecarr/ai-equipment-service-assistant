@@ -9,6 +9,8 @@ prompt agent. `README.md` describes the architecture, API and setup.
   `function_app` from the repository root.
 - Matching evaluation: `python -m scripts.evaluate_matching`. It exits non-zero on any wrong link.
 - Both run in CI on every pull request (`.github/workflows/ci.yml`) and need no Azure access.
+- Agent evaluation: `python -m scripts.evaluate_agent --version <n>`. It calls the live agent, so it
+  needs `az login` and is not part of the pull request checks.
 
 ## Rules
 
@@ -25,6 +27,17 @@ prompt agent. `README.md` describes the architecture, API and setup.
 - **Prompt text is behavior.** The agent instructions, the grounding and history block headers and
   labels (`app/grounding/lookup.py`, `app/history/lookup.py`) and the retry message
   (`app/foundry/client.py`) all reach the model. Change them deliberately, in their own change.
+  `tests/snapshots/` pins the full message; regenerate it with
+  `UPDATE_SNAPSHOTS=1 python -m pytest tests/test_prompt_snapshots.py` and review the diff.
+- **The agent definition lives in `agents/<name>/`** (`agent.yaml` and `instructions.md`), not in
+  the Foundry portal. Until the release workflow is proven, `README.md` keeps a copy of the
+  instructions and a test keeps the two identical.
+- **The app always calls an exact agent version**, read from the generated, git-ignored
+  `agent_reference.json`. Never add a fallback to the agent's latest version. For a local run,
+  write the file with `python -m scripts.publish_agent --reference-only --version <n>`.
+- **An evaluation assertion is `blocking` only if the live agent version passes it reliably.**
+  Anything else goes under `advisory` in the case's `expect.yaml`, with a comment saying why.
+  The schema check always blocks; a case may only narrow it with `except_null` for a named field.
 - **All data is sample data.** Keep seed data, test fixtures and evaluation cases that way.
 - **Work on a branch and open a pull request.** Keep each one small enough to review.
 

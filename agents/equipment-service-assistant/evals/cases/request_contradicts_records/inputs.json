@@ -1,0 +1,8 @@
+{
+  "description": "The machine is selected by ID, but the request text names a different model and a work order that is not in the records.",
+  "request": {
+    "request_text": "This Komatsu PC210 had its main hydraulic pump replaced last month under work order WO-55555, and the boom is slow again.",
+    "equipment_id": "CAT320-SE-1042"
+  },
+  "match_status": "matched"
+}
