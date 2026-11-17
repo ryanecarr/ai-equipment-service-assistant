@@ -194,8 +194,10 @@ scripts/
   migrate_grounding_to_cosmos.py  # re-runnable data import; not deployed
   evaluate_matching.py       # prints the matcher's scorecard
   agent_definition.py        # loads and validates an agents/<name>/ folder
-  publish_agent.py           # writes agent_reference.json for an agent version
+  publish_agent.py           # creates an agent version (release only); writes agent_reference.json
   evaluate_agent.py          # scores one agent version against the evaluation cases
+  build_package.py           # builds the deployment package for a release
+  smoke_test.py              # checks the deployed application answers one request
 seed-data/                   # source data for the import; not read at runtime
 tests/                       # pytest suites, plus an in-memory Cosmos fake; no Azure access needed
   snapshots/                 # the exact messages sent to the agent for a few requests
@@ -494,7 +496,7 @@ Three things stay outside Terraform:
 
 - The Foundry agent is created inside the project, not as an Azure resource. Its definition is in
   `agents/`.
-- Application code is deployed with `func azure functionapp publish`; see "Deployment".
+- Application code is deployed by the release workflow; see "Release".
 - The Log Analytics workspace behind Application Insights is one Azure created by default; it is
   referenced, not managed.
 
@@ -579,17 +581,60 @@ curl -s -X POST http://localhost:7071/api/assess \
   }'
 ```
 
-## Deployment
+## Release
+
+Merging to `main` releases the application and its agent together (`.github/workflows/release.yml`).
+Each release creates a new agent version, evaluates that exact version, and deploys a package that calls
+it. A push that changes only documentation or tests does not start a release.
+
+| Job | Signs in as | What it does |
+|---|---|---|
+| Checks | Nothing | Unit tests and the matching evaluation |
+| Agent version | The agent release identity | Creates a Foundry agent version from `agents/` and runs the agent evaluation against it. A failed or unfinished evaluation stops the release here |
+| Package | Nothing | Builds `package.zip`: the code, its installed dependencies and an `agent_reference.json` naming the new version |
+| Terraform plan | The plan identity, then the plan store identity | Plans `infra/poc` and saves the plan file in private storage |
+| Deploy | The apply identity, after approval in the `poc` environment | Applies the saved plan, deploys `package.zip`, runs a smoke test, then publishes a GitHub Release holding the package, the agent reference and the evaluation report |
+
+Before approving, read the evaluation result in the Agent version job and the plan in the Terraform plan
+job. What you approve is what runs:
+
+- The deploy job applies the saved plan file and checks it against a checksum passed from the plan job.
+  If the state changed after the plan was made, Terraform refuses the plan; start a new run.
+- The deploy job stops if `main` has moved on since its run started, so an old run approved late cannot
+  replace a newer deployment. Approve the newest run and reject the older ones. To release the tip of
+  `main` again, start the Release workflow by hand from the Actions tab.
+- Until the deploy job replaces the package, the deployed application keeps calling its previous agent
+  version. Creating a version changes nothing for it.
+
+**Rolling back.** Start the Rollback workflow from the Actions tab with a release tag, for example
+`release-12.1`. After the same approval it redeploys that release's package and runs the smoke test, so
+the code and the agent version go back together. It rebuilds nothing. It does not undo infrastructure
+changes, and `main` still holds the newer commit: revert it before the next merge.
+
+**Trade-offs accepted for this POC:**
+
+- A failed evaluation blocks the release. The deployed application keeps its previous package and agent
+  version; fix or revert on `main` to make it releasable again.
+- The evaluation shares the application's model capacity. It runs one case at a time, honors throttling
+  delays, and bounds its retries and run time. Separate evaluation capacity is the first improvement to
+  make when the POC gains regular users.
+- The agent's latest version in Foundry is a candidate, not the live one. A candidate that failed its
+  evaluation stays there as the latest version, and anything that follows "latest", such as the Foundry
+  playground, may use it. The application never does.
+- Every release creates a new agent version, even when `agents/` did not change. Nothing compares
+  versions by content.
+- The smoke test shows the application answers a real request after the deployment. It does not show
+  which package answered.
+- The release scripts are small and live in this repository. Shared tooling waits until a second
+  application gives concrete requirements for it.
+
+**By hand.** The same two steps still work from a terminal, with the environment from "Local
+development". A deployment made this way has no GitHub Release, so it cannot be rolled back to.
 
 ```bash
 python -m scripts.publish_agent --reference-only --version <n>   # writes agent_reference.json
 func azure functionapp publish <function-app>
 ```
 
-The first command records which agent version this deployment calls; it needs the environment from
-"Local development". `agent_reference.json` is git-ignored but is included in the published package, so
-the code and its agent version deploy together.
-
-Publishing runs a remote Oryx build against the Function App's Python version. The Function App
-settings come from `infra/poc/function.tf`, so a new setting is added there and applied before the code
-that reads it is published.
+The Function App settings come from `infra/poc/function.tf`. The release applies Terraform before it
+deploys the package, so a new setting and the code that reads it can ship in one pull request.
