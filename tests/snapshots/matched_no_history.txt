@@ -1,0 +1,11 @@
+The boom on CAT320-SE-1042 is raising slowly again under load.
+
+---
+
+KNOWN PRIOR RECORDS (from internal systems, for reference only — not manufacturer documentation):
+Equipment: CAT 320 (CAT320-SE-1042), Customer: Southeast Construction, Hours: 4312, Last PM: 2026-09-02
+Prior service history:
+- 2026-06-14 [WO-10234]: Reported "Boom raises slowly under load" — Resolution: Replaced main control valve O-rings; hydraulic response restored. Notes: No fault codes present at time of service. Recommend monitoring filter condition.
+- 2026-09-02 [WO-10590]: Reported "Routine preventive maintenance" — Resolution: Hydraulic fluid and filter replaced; system pressure tested within spec. Notes: No anomalies observed.
+
+PREVIOUSLY SAVED ASSESSMENTS: none found for this equipment in internal systems.

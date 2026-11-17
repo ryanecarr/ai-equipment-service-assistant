@@ -59,10 +59,15 @@ def _run_response(openai_client, conversation_id: str, agent_name: str) -> str:
     return response.output_text
 
 
+def compose_message(request_text: str, grounding_block: str) -> str:
+    """The exact user message the agent receives. tests/snapshots/ pins its wording."""
+    return f"{request_text}\n\n---\n\n{grounding_block}"
+
+
 def get_assessment(request_text: str, grounding_block: str) -> MaintenanceAssessment:
     agent_name = os.environ["AGENT_NAME"]
     client = _get_project_client()
-    composed_message = f"{request_text}\n\n---\n\n{grounding_block}"
+    composed_message = compose_message(request_text, grounding_block)
 
     with client.get_openai_client() as openai_client:
         conversation = None

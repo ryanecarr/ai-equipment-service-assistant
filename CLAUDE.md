@@ -25,6 +25,11 @@ prompt agent. `README.md` describes the architecture, API and setup.
 - **Prompt text is behavior.** The agent instructions, the grounding and history block headers and
   labels (`app/grounding/lookup.py`, `app/history/lookup.py`) and the retry message
   (`app/foundry/client.py`) all reach the model. Change them deliberately, in their own change.
+  `tests/snapshots/` pins the full message; regenerate it with
+  `UPDATE_SNAPSHOTS=1 python -m pytest tests/test_prompt_snapshots.py` and review the diff.
+- **The agent definition lives in `agents/<name>/`** (`agent.yaml` and `instructions.md`), not in
+  the Foundry portal. Until the release workflow is proven, `README.md` keeps a copy of the
+  instructions and a test keeps the two identical.
 - **All data is sample data.** Keep seed data, test fixtures and evaluation cases that way.
 - **Work on a branch and open a pull request.** Keep each one small enough to review.
 

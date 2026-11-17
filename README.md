@@ -164,6 +164,8 @@ completed work. These checks are covered by `tests/test_assess_endpoint.py` and
 
 ```
 function_app.py              # HTTP triggers for /assess, /assessments and /equipment
+agents/
+  equipment-service-assistant/  # the Foundry agent's definition: agent.yaml + instructions.md
 app/
   cosmos.py                  # shared Cosmos client, error translation, RU logging, record validation
   errors.py                  # AppError hierarchy -> HTTP status/code mapping
@@ -182,8 +184,10 @@ infra/                       # Terraform: bootstrap/ (state storage) and poc/ (t
 scripts/
   migrate_grounding_to_cosmos.py  # re-runnable data import; not deployed
   evaluate_matching.py       # prints the matcher's scorecard
+  agent_definition.py        # loads and validates an agents/<name>/ folder
 seed-data/                   # source data for the import; not read at runtime
 tests/                       # pytest suites, plus an in-memory Cosmos fake; no Azure access needed
+  snapshots/                 # the exact messages sent to the agent for a few requests
 ui/                          # Angular app
 ```
 
@@ -197,6 +201,10 @@ python -m scripts.evaluate_matching
 
 Use `python -m pytest` rather than bare `pytest`, because the tests import `app` and `function_app` from
 the repo root. No suite needs Azure credentials or network access. UI tests run with `npm test` in `ui/`.
+
+`tests/snapshots/` holds the complete message the agent receives for a few requests. A change to any
+header, label or separator fails `tests/test_prompt_snapshots.py`. To accept an intended change, run
+`UPDATE_SNAPSHOTS=1 python -m pytest tests/test_prompt_snapshots.py` and review the diff.
 
 ## API
 
