@@ -37,6 +37,7 @@ prompt agent. `README.md` describes the architecture, API and setup.
   write the file with `python -m scripts.publish_agent --reference-only --version <n>`.
 - **An evaluation assertion is `blocking` only if the live agent version passes it reliably.**
   Anything else goes under `advisory` in the case's `expect.yaml`, with a comment saying why.
+  The schema check always blocks; a case may only narrow it with `except_null` for a named field.
 - **All data is sample data.** Keep seed data, test fixtures and evaluation cases that way.
 - **Work on a branch and open a pull request.** Keep each one small enough to review.
 

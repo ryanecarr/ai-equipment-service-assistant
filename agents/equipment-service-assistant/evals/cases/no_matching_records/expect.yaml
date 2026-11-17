@@ -1,8 +1,11 @@
 # Agent version 5 sometimes returns equipment_model as null when the request names no
-# model. That fails the schema; the application's corrective retry recovers it at the cost
-# of a second agent call. Remove valid_schema from advisory once that is fixed, and it
-# blocks again like every other case.
+# model. The application's corrective retry recovers it at the cost of a second agent call.
+# The blocking schema check accepts that one null and nothing else: a missing field, or any
+# other schema error, still fails the case. The advisory check is the strict schema, so each
+# occurrence is reported. When the instructions are fixed, delete both valid_schema entries.
 blocking:
+  valid_schema:
+    except_null: [equipment_model]
   grounding_used: false
   cites_only_known_work_orders: true
   comparison_notes: absent

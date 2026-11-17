@@ -14,7 +14,9 @@ agent's first reply is scored as it arrived: no corrective retry, none of the
 application's output corrections. Blocking assertions decide the exit code. Advisory
 assertions and rubric scores are reported only.
 
-Cases run one at a time because the agent shares the application's model capacity.
+Cases run one at a time because the agent shares the application's model capacity. Only
+throttling is retried, never sooner than the service asks, and every request's timeout is
+the time the run has left.
 """
 
 import argparse
@@ -72,12 +74,20 @@ class Case:
     rubric: tuple[str, ...] = ()
 
 
-def _schema_error(output: dict[str, Any]) -> Optional[str]:
+def _schema_errors(output: dict[str, Any], expected: Any = True) -> list[str]:
+    """Every way the reply breaks the application's schema. `expected` is True, or
+    {"except_null": [field, ...]} to accept a null in exactly those fields: a documented
+    gap in the live agent version. A missing field, or any other error, still counts."""
     try:
         MaintenanceAssessment.model_validate(output)
     except ValidationError as exc:
-        return str(exc)
-    return None
+        accepted_nulls = set(expected.get("except_null", ())) if isinstance(expected, dict) else set()
+        return [
+            f"{'.'.join(str(part) for part in error['loc'])}: {error['msg']}"
+            for error in exc.errors()
+            if not (len(error["loc"]) == 1 and error["loc"][0] in accepted_nulls and error["input"] is None)
+        ]
+    return []
 
 
 def _list_entries(output: dict[str, Any]) -> list[str]:
@@ -87,7 +97,7 @@ def _list_entries(output: dict[str, Any]) -> list[str]:
 # Each check reads the reply as a plain JSON object, so a reply that fails the schema in
 # one field can still be checked on the others. A check that raises counts as failed.
 CHECKS: dict[str, Callable[[Any, dict[str, Any], str, Case], bool]] = {
-    "valid_schema": lambda expected, output, raw, case: _schema_error(output) is None,
+    "valid_schema": lambda expected, output, raw, case: not _schema_errors(output, expected),
     "grounding_used": lambda expected, output, raw, case: output["grounding_used"] is expected,
     "requires_technician_review": lambda expected, output, raw, case: output["requires_technician_review"] is expected,
     "category": lambda expected, output, raw, case: output["category"] == expected,
@@ -106,7 +116,8 @@ CHECKS: dict[str, Callable[[Any, dict[str, Any], str, Case], bool]] = {
     ),
 }
 
-# Applied to every case. A case can move valid_schema to advisory by listing it there.
+# Applied to every case, and it cannot be switched off. A case can only narrow it to accept
+# a null in named fields: valid_schema: {except_null: [equipment_model]}.
 BLOCKING_FOR_EVERY_CASE = {"valid_schema": True}
 # The application already corrects both of these, so they never block.
 ADVISORY_FOR_EVERY_CASE = {"plain_json": True, "plain_list_entries": True}
@@ -119,12 +130,18 @@ def load_case(folder: Path) -> Case:
     unknown_sections = set(expect) - {"blocking", "advisory", "rubric"}
     advisory = {**ADVISORY_FOR_EVERY_CASE, **(expect.get("advisory") or {})}
     blocking = {**BLOCKING_FOR_EVERY_CASE, **(expect.get("blocking") or {})}
-    blocking = {name: expected for name, expected in blocking.items() if name not in advisory}
     unknown_checks = (set(blocking) | set(advisory)) - set(CHECKS)
     if unknown_sections or unknown_checks:
         raise ValueError(f"{folder.name}/expect.yaml uses unknown names: {sorted(unknown_sections | unknown_checks)}")
-    if blocking.get("comparison_notes", "absent") not in ("absent", "present"):
-        raise ValueError(f"{folder.name}/expect.yaml: comparison_notes must be 'absent' or 'present'")
+    for section in (blocking, advisory):
+        if section.get("comparison_notes", "absent") not in ("absent", "present"):
+            raise ValueError(f"{folder.name}/expect.yaml: comparison_notes must be 'absent' or 'present'")
+        schema = section.get("valid_schema", True)
+        narrowed = isinstance(schema, dict) and set(schema) == {"except_null"} and isinstance(schema["except_null"], list)
+        if schema is not True and not (narrowed and set(schema["except_null"]) <= set(MaintenanceAssessment.model_fields)):
+            raise ValueError(
+                f"{folder.name}/expect.yaml: valid_schema must be true, or except_null with a list of schema fields"
+            )
 
     # Sample records behind the same lookups /api/assess uses.
     equipment_master, work_orders = load_source("seed")
@@ -177,7 +194,7 @@ def _assert_all(expectations: dict[str, Any], output: dict[str, Any], raw: str, 
             passed = False
         result = {"check": name, "expected": expected, "passed": passed}
         if name == "valid_schema" and not passed:
-            result["detail"] = (_schema_error(output) or "")[:500]
+            result["detail"] = "; ".join(_schema_errors(output, expected))[:500]
         results.append(result)
     return results
 
@@ -204,32 +221,54 @@ def score(case: Case, raw: str) -> dict[str, list[dict]]:
 # --- calling Foundry ------------------------------------------------------------------------
 
 
-def _retry_after_seconds(exc: RateLimitError) -> float:
-    try:
-        return float(exc.response.headers.get("retry-after", DEFAULT_THROTTLE_DELAY_SECONDS))
-    except (AttributeError, ValueError):
-        return DEFAULT_THROTTLE_DELAY_SECONDS
+def _retry_after_seconds(exc: RateLimitError) -> Optional[float]:
+    """The wait the service asked for, or None if it did not give one this script can read."""
+    headers = getattr(exc.response, "headers", None) or {}
+    for name, seconds_per_unit in (("retry-after-ms", 0.001), ("retry-after", 1.0)):
+        try:
+            return float(headers[name]) * seconds_per_unit
+        except (KeyError, TypeError, ValueError):
+            continue
+    return None
 
 
 def with_throttle_retries(
-    call: Callable[[], str],
+    call: Callable[[float], Any],
     deadline: float,
     sleep: Callable[[float], None] = time.sleep,
     clock: Callable[[], float] = time.monotonic,
-) -> str:
-    """Retries only on throttling, waiting as long as the service asks, within the limits."""
+) -> Any:
+    """Makes one call, retrying only on throttling. `call` receives the seconds left before
+    the deadline, to use as its request timeout. It never retries sooner than the service
+    asks: a wait longer than this run allows ends the run instead."""
     for attempt in range(1, MAX_ATTEMPTS_PER_CALL + 1):
+        seconds_left = deadline - clock()
+        if seconds_left <= 0:
+            raise RunIncomplete("the time limit was reached")
         try:
-            return call()
+            return call(seconds_left)
         except RateLimitError as exc:
-            delay = min(_retry_after_seconds(exc), MAX_THROTTLE_DELAY_SECONDS)
+            asked = _retry_after_seconds(exc)
+            delay = DEFAULT_THROTTLE_DELAY_SECONDS if asked is None else asked
             if attempt == MAX_ATTEMPTS_PER_CALL:
                 raise RunIncomplete(f"still throttled after {MAX_ATTEMPTS_PER_CALL} attempts") from exc
-            if clock() + delay > deadline:
+            if delay > MAX_THROTTLE_DELAY_SECONDS:
+                raise RunIncomplete(
+                    f"throttled, and the service asked for a {delay:.0f}s wait; "
+                    f"this run waits at most {MAX_THROTTLE_DELAY_SECONDS:.0f}s"
+                ) from exc
+            if clock() + delay >= deadline:
                 raise RunIncomplete("throttled, and waiting would pass the time limit") from exc
-            print(f"  throttled; waiting {delay:.0f}s (attempt {attempt} of {MAX_ATTEMPTS_PER_CALL})", flush=True)
+            source = "the service gave no delay" if asked is None else "as the service asked"
+            print(f"  throttled; waiting {delay:.0f}s, {source} (attempt {attempt} of {MAX_ATTEMPTS_PER_CALL})", flush=True)
             sleep(delay)
     raise AssertionError("unreachable")
+
+
+def bounded(openai_client, timeout_seconds: float):
+    """The same client with a request timeout and no retries of its own. The SDK would
+    otherwise retry twice by itself, hiding throttling from the limits above."""
+    return openai_client.with_options(timeout=timeout_seconds, max_retries=0)
 
 
 def call_agent(openai_client, reference: AgentReference, message: str) -> str:
@@ -282,14 +321,19 @@ def grade(openai_client, model: str, case: Case, raw: str) -> list[dict]:
 
 def run_suite(
     cases: list[Case],
-    ask_agent: Callable[[str], str],
-    ask_grader: Optional[Callable[[Case, str], list[dict]]],
+    ask_agent: Callable[[str, float], str],
+    ask_grader: Optional[Callable[[Case, str, float], list[dict]]],
     max_seconds: float,
     sleep: Callable[[float], None] = time.sleep,
     clock: Callable[[], float] = time.monotonic,
 ) -> dict[str, Any]:
-    """Runs every case in order. Returns {"result": passed | failed | incomplete, "cases": [...]}."""
+    """Runs every case in order. Returns {"result": passed | failed | incomplete, "cases": [...]}.
+
+    ask_agent(message, timeout) and ask_grader(case, raw, timeout) each get the seconds left.
+    The time limit is checked before every call and again once a case is done, so a run that
+    went over is never reported as passed."""
     deadline = clock() + max_seconds
+    time_limit = f"time limit of {max_seconds / 60:.0f} minutes reached"
     results: list[dict[str, Any]] = []
     incomplete: Optional[str] = None
 
@@ -297,14 +341,14 @@ def run_suite(
         entry: dict[str, Any] = {"name": case.name, "description": case.description, "message": case.message}
         results.append(entry)
         if incomplete is None and clock() >= deadline:
-            incomplete = f"time limit of {max_seconds / 60:.0f} minutes reached"
+            incomplete = time_limit
         if incomplete is not None:
             entry["error"] = f"not run: {incomplete}"
             continue
 
         print(f"{case.name}", flush=True)
         try:
-            raw = with_throttle_retries(lambda: ask_agent(case.message), deadline, sleep, clock)
+            raw = with_throttle_retries(lambda timeout: ask_agent(case.message, timeout), deadline, sleep, clock)
         except Exception as exc:
             incomplete = f"{case.name}: {exc}"
             entry["error"] = str(exc)
@@ -314,9 +358,14 @@ def run_suite(
 
         if case.rubric and ask_grader is not None:
             try:
-                entry["rubric"] = with_throttle_retries(lambda: ask_grader(case, raw), deadline, sleep, clock)
+                entry["rubric"] = with_throttle_retries(
+                    lambda timeout: ask_grader(case, raw, timeout), deadline, sleep, clock
+                )
             except Exception as exc:  # advisory, so a grader problem never fails the run
                 entry["rubric"] = [{"criterion": c, "met": None, "reason": f"not scored: {exc}"} for c in case.rubric]
+
+        if clock() > deadline:
+            incomplete = f"{time_limit} during {case.name}"
 
     if incomplete is not None:
         result = "incomplete"
@@ -389,8 +438,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     with _get_project_client().get_openai_client() as openai_client:
         report = run_suite(
             cases,
-            ask_agent=lambda message: call_agent(openai_client, reference, message),
-            ask_grader=None if args.no_rubric else lambda case, raw: grade(openai_client, definition.model, case, raw),
+            ask_agent=lambda message, timeout: call_agent(bounded(openai_client, timeout), reference, message),
+            ask_grader=None
+            if args.no_rubric
+            else lambda case, raw, timeout: grade(bounded(openai_client, timeout), definition.model, case, raw),
             max_seconds=args.max_minutes * 60,
         )
 

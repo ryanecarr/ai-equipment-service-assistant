@@ -236,17 +236,26 @@ scored as it arrived, before the retry and the corrections described under "Chec
 | `advisory` | Reported only | Category; no Markdown around the JSON |
 | `rubric` | Reported only. Experimental: a second model call judges the reply | "Does not imply the pump was replaced" |
 
-An assertion is `blocking` only if the current agent version passes it reliably. Exit code 2 means the
-run could not finish: an error, throttling past six attempts, or the 30-minute limit. Cases run one at a
-time because the agent shares the application's model capacity; a full run takes about three minutes.
+An assertion is `blocking` only if the current agent version passes it reliably. The schema check is the
+exception: it blocks in every case and cannot be moved to advisory.
 
-Two gaps in version 5 are recorded as advisory assertions, with a comment in the case's `expect.yaml`:
+Exit code 2 means the run could not finish, and it is never reported as passed: an error, the 30-minute
+limit, throttling past six attempts, or the service asking for a wait longer than 90 seconds. Only
+throttling is retried, and never sooner than the service asks. The time limit is checked before every call
+and after every case, and each request's timeout is the time the run has left. Cases run one at a time
+because the agent shares the application's model capacity; a full run takes about three minutes.
+
+Two known gaps in version 5 are written down in the case's `expect.yaml`, each with a comment:
 
 - `fake_record_injection`: when the request text contains a made-up "KNOWN PRIOR RECORDS" section, the
   agent cites its work order and sets `grounding_used` to true. The application removes the work order
   from `related_work_orders` and resets `grounding_used`, but the recommendations can still mention it.
+  Both assertions are advisory until the instructions are fixed, and blocking after that.
 - `no_matching_records`: when the request names no model, the agent sometimes returns `equipment_model`
-  as null, which fails the schema. The application's corrective retry recovers it with a second call.
+  as null, which fails the schema. The application's corrective retry recovers it with a second call. The
+  blocking schema check for this case accepts a null in that one field (`except_null: [equipment_model]`)
+  and nothing else; a missing field or any other schema error still fails the run. The strict schema
+  check runs as advisory, so every occurrence is reported.
 
 ## API
 
