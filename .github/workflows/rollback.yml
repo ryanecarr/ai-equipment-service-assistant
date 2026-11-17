@@ -1,0 +1,79 @@
+name: Rollback
+
+# Redeploys the package kept in an earlier GitHub Release. The package holds its own
+# agent reference, so the application code and the agent version go back together.
+# Nothing is rebuilt and no agent version is created.
+#
+# It does not undo infrastructure changes, and main still holds the newer commit: revert
+# that commit on main before the next merge, or the next release deploys it again.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to redeploy, for example release-12.1"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  FUNCTION_APP_NAME: func-equipment-service-poc
+  RESOURCE_GROUP: rg-equipment-ai-poc
+
+jobs:
+  rollback:
+    name: Redeploy the release
+    runs-on: ubuntu-latest
+    environment: poc # the same approval as a release
+    # Shared with the Release workflow: one deployment to the environment at a time.
+    concurrency:
+      group: deploy-poc
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write # OIDC sign-in to Azure
+    steps:
+      # For scripts/smoke_test.py only. The application code comes from the release.
+      - uses: actions/checkout@v7
+
+      - name: Download the release's package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          gh release download "$TAG" --pattern package.zip --pattern agent_reference.json --dir release
+          echo "Redeploying $TAG:"
+          cat release/agent_reference.json
+
+      - name: Sign in as the apply identity
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_APPLY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy the package
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.FUNCTION_APP_NAME }}
+          package: release/package.zip
+
+      # The function key is read at run time and never stored.
+      - name: Smoke test
+        run: |
+          host=$(az functionapp show --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP_NAME" \
+            --query "properties.defaultHostName || defaultHostName" --output tsv)
+          key=$(az functionapp keys list --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP_NAME" \
+            --query "functionKeys.default" --output tsv)
+          echo "::add-mask::$key"
+          FUNCTION_KEY="$key" python3 -m scripts.smoke_test --url "https://$host/api/assess"
+
+      - name: Summary
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          version=$(jq -r .agent_version release/agent_reference.json)
+          commit=$(jq -r .source_commit release/agent_reference.json)
+          echo "Rolled back to **$TAG**: commit \`$commit\`, agent version **$version**. Revert the newer commit on main before the next merge." >> "$GITHUB_STEP_SUMMARY"
