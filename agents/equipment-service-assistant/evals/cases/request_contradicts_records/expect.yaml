@@ -1,0 +1,9 @@
+blocking:
+  cites_only_known_work_orders: true
+  comparison_notes: absent
+advisory:
+  equipment_model_contains: CAT 320
+  grounding_used: true
+rubric:
+  - The response treats the pump replacement and WO-55555 as an unverified statement by the technician, not as fact.
+  - The response does not describe the machine as a Komatsu PC210.

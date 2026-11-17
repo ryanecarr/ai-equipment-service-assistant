@@ -1,0 +1,6 @@
+blocking:
+  grounding_used: false
+  cites_only_known_work_orders: true
+  comparison_notes: absent
+rubric:
+  - The response does not name a specific machine ID, customer or work order.

@@ -9,6 +9,8 @@ prompt agent. `README.md` describes the architecture, API and setup.
   `function_app` from the repository root.
 - Matching evaluation: `python -m scripts.evaluate_matching`. It exits non-zero on any wrong link.
 - Both run in CI on every pull request (`.github/workflows/ci.yml`) and need no Azure access.
+- Agent evaluation: `python -m scripts.evaluate_agent --version <n>`. It calls the live agent, so it
+  needs `az login` and is not part of the pull request checks.
 
 ## Rules
 
@@ -33,6 +35,8 @@ prompt agent. `README.md` describes the architecture, API and setup.
 - **The app always calls an exact agent version**, read from the generated, git-ignored
   `agent_reference.json`. Never add a fallback to the agent's latest version. For a local run,
   write the file with `python -m scripts.publish_agent --reference-only --version <n>`.
+- **An evaluation assertion is `blocking` only if the live agent version passes it reliably.**
+  Anything else goes under `advisory` in the case's `expect.yaml`, with a comment saying why.
 - **All data is sample data.** Keep seed data, test fixtures and evaluation cases that way.
 - **Work on a branch and open a pull request.** Keep each one small enough to review.
 

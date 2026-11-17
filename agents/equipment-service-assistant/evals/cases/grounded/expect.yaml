@@ -1,0 +1,9 @@
+blocking:
+  grounding_used: true
+  cites: [WO-10234]
+  cites_only_known_work_orders: true
+  comparison_notes: absent
+advisory:
+  equipment_model_contains: CAT 320
+  category: Hydraulic
+  requires_technician_review: true

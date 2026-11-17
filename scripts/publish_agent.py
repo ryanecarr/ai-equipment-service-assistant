@@ -25,14 +25,14 @@ from app.foundry.agent_reference import REFERENCE_PATH, AgentReference
 from scripts.agent_definition import AGENTS_DIR, REPO_ROOT, AgentDefinitionError, load_agent_definition
 
 
-def _default_agent_folder() -> Path:
+def default_agent_folder() -> Path:
     folders = sorted(path for path in AGENTS_DIR.iterdir() if path.is_dir())
     if len(folders) != 1:
         raise SystemExit(f"Expected one folder in {AGENTS_DIR}, found {len(folders)}. Pass --agent <folder>.")
     return folders[0]
 
 
-def _default_project_endpoint() -> Optional[str]:
+def default_project_endpoint() -> Optional[str]:
     if os.environ.get("PROJECT_ENDPOINT"):
         return os.environ["PROJECT_ENDPOINT"]
     local_settings = REPO_ROOT / "local.settings.json"
@@ -41,7 +41,7 @@ def _default_project_endpoint() -> Optional[str]:
     return None
 
 
-def _current_commit() -> str:
+def current_commit() -> str:
     result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True)
     return result.stdout.strip() if result.returncode == 0 else "unknown"
 
@@ -72,14 +72,14 @@ def main(argv: Optional[list[str]] = None) -> int:
     if not args.reference_only or not args.version:
         parser.error("pass --reference-only --version <n>. Creating a version is done by the release workflow.")
 
-    project_endpoint = args.project_endpoint or _default_project_endpoint()
+    project_endpoint = args.project_endpoint or default_project_endpoint()
     if not project_endpoint:
         parser.error("no project endpoint: set PROJECT_ENDPOINT, fill in local.settings.json, or pass --project-endpoint")
 
     try:
-        definition = load_agent_definition(args.agent or _default_agent_folder())
+        definition = load_agent_definition(args.agent or default_agent_folder())
         reference = write_reference(
-            args.output, project_endpoint, definition.name, args.version, args.commit or _current_commit()
+            args.output, project_endpoint, definition.name, args.version, args.commit or current_commit()
         )
     except (AgentDefinitionError, ValidationError) as exc:
         print(f"error: {exc}", file=sys.stderr)

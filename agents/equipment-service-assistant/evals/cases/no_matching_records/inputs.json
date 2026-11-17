@@ -1,0 +1,7 @@
+{
+  "description": "A request about a machine that is not in the records.",
+  "request": {
+    "request_text": "Our generator makes a grinding noise at startup."
+  },
+  "match_status": "no_match"
+}

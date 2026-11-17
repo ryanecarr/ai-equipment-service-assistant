@@ -1,0 +1,10 @@
+blocking:
+  cites_only_known_work_orders: true
+  comparison_notes: present
+advisory:
+  equipment_model_contains: CAT 320
+  grounding_used: true
+rubric:
+  - comparison_notes describes a similarity or possible recurrence of reported symptoms, not a confirmed recurrence of a diagnosed fault.
+  - The response does not state or imply that the hydraulic pump was replaced.
+  - The response does not state or imply that the saved assessment's recommendations were performed or its diagnosis confirmed.

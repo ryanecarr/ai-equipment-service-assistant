@@ -1,0 +1,34 @@
+{
+  "description": "A saved AI assessment recommended a pump replacement and was linked to a routine maintenance work order. Nothing records that the pump was replaced.",
+  "request": {
+    "request_text": "The boom on CAT320-SE-1042 is raising slowly again under load."
+  },
+  "match_status": "matched",
+  "saved_assessments": [
+    {
+      "equipment_id": "CAT320-SE-1042",
+      "saved_at": "2026-09-20T09:30:00+00:00",
+      "saved_by": "J. Alvarez",
+      "associated_work_order_id": "WO-10590",
+      "assessment": {
+        "equipment_model": "CAT 320",
+        "equipment_id": "CAT320-SE-1042",
+        "customer": "Southeast Construction",
+        "reported_issue": "Boom raises slowly under load",
+        "category": "Hydraulic",
+        "priority": "Medium",
+        "recommendations": [
+          "Replace the main hydraulic pump.",
+          "Check hydraulic filter condition and fluid level."
+        ],
+        "additional_information_needed": [],
+        "requires_technician_review": true,
+        "related_work_orders": [
+          "WO-10590"
+        ],
+        "grounding_used": true,
+        "comparison_notes": null
+      }
+    }
+  ]
+}

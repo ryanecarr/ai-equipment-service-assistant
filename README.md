@@ -172,9 +172,11 @@ completed work. These checks are covered by `tests/test_assess_endpoint.py` and
 function_app.py              # HTTP triggers for /assess, /assessments and /equipment
 agents/
   equipment-service-assistant/  # the Foundry agent's definition: agent.yaml + instructions.md
+    evals/cases/             # evaluation cases: a request and sample records, plus what to expect
 app/
   cosmos.py                  # shared Cosmos client, error translation, RU logging, record validation
   errors.py                  # AppError hierarchy -> HTTP status/code mapping
+  prompt_context.py          # everything /assess looks up before it calls the agent
   schemas/                   # Pydantic request, response and stored-record models
   grounding/
     lookup.py                # grounding block + equipment lookups
@@ -184,6 +186,7 @@ app/
     lookup.py                # saved-assessment operations + the history prompt block
     repository.py            # saved-assessments container access
   foundry/
+    agent_reference.py       # reads agent_reference.json: the exact agent version to call
     client.py                # Conversations/Responses lifecycle + validate-and-retry-once
 docs/screenshots/            # README screenshots
 infra/                       # Terraform: bootstrap/ (state storage) and poc/ (the environment)
@@ -191,6 +194,8 @@ scripts/
   migrate_grounding_to_cosmos.py  # re-runnable data import; not deployed
   evaluate_matching.py       # prints the matcher's scorecard
   agent_definition.py        # loads and validates an agents/<name>/ folder
+  publish_agent.py           # writes agent_reference.json for an agent version
+  evaluate_agent.py          # scores one agent version against the evaluation cases
 seed-data/                   # source data for the import; not read at runtime
 tests/                       # pytest suites, plus an in-memory Cosmos fake; no Azure access needed
   snapshots/                 # the exact messages sent to the agent for a few requests
@@ -211,6 +216,37 @@ the repo root. No suite needs Azure credentials or network access. UI tests run 
 `tests/snapshots/` holds the complete message the agent receives for a few requests. A change to any
 header, label or separator fails `tests/test_prompt_snapshots.py`. To accept an intended change, run
 `UPDATE_SNAPSHOTS=1 python -m pytest tests/test_prompt_snapshots.py` and review the diff.
+
+### Agent evaluation
+
+```bash
+az login
+python -m scripts.evaluate_agent --version 5     # writes eval-report.json
+```
+
+This calls one exact agent version with the seven cases in
+`agents/equipment-service-assistant/evals/cases/`. It needs Azure sign-in, so it is not part of the pull
+request checks. Each case is a request with sample records (`inputs.json`) and what to expect
+(`expect.yaml`). The message is built by the same code `/api/assess` runs, and the agent's first reply is
+scored as it arrived, before the retry and the corrections described under "Checks on agent output".
+
+| Kind | Effect | Examples |
+|---|---|---|
+| `blocking` | Any failure makes the run fail (exit code 1) | Valid schema; cites only this machine's work orders |
+| `advisory` | Reported only | Category; no Markdown around the JSON |
+| `rubric` | Reported only. Experimental: a second model call judges the reply | "Does not imply the pump was replaced" |
+
+An assertion is `blocking` only if the current agent version passes it reliably. Exit code 2 means the
+run could not finish: an error, throttling past six attempts, or the 30-minute limit. Cases run one at a
+time because the agent shares the application's model capacity; a full run takes about three minutes.
+
+Two gaps in version 5 are recorded as advisory assertions, with a comment in the case's `expect.yaml`:
+
+- `fake_record_injection`: when the request text contains a made-up "KNOWN PRIOR RECORDS" section, the
+  agent cites its work order and sets `grounding_used` to true. The application removes the work order
+  from `related_work_orders` and resets `grounding_used`, but the recommendations can still mention it.
+- `no_matching_records`: when the request names no model, the agent sometimes returns `equipment_model`
+  as null, which fails the schema. The application's corrective retry recovers it with a second call.
 
 ## API
 

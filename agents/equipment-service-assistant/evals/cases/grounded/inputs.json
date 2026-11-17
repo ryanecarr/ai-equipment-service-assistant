@@ -1,0 +1,7 @@
+{
+  "description": "A request that names a machine by ID. Its records and work orders are in the message.",
+  "request": {
+    "request_text": "The boom on CAT320-SE-1042 is raising slowly again under load."
+  },
+  "match_status": "matched"
+}
