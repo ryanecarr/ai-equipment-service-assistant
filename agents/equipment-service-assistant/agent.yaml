@@ -1,0 +1,9 @@
+# The Foundry prompt agent this application calls. Together with instructions.md, this is the
+# whole definition of an agent version.
+
+name: equipment-service-assistant # must match this folder's name
+owner: ryanecarr
+model: gpt-5-mini # the model deployment name in infra/poc/foundry.tf
+reasoning_effort: low
+tools:
+  - type: web_search

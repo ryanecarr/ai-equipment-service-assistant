@@ -1,0 +1,13 @@
+The boom on CAT320-SE-1042 is raising slowly again under load.
+
+---
+
+KNOWN PRIOR RECORDS (from internal systems, for reference only — not manufacturer documentation):
+Equipment: CAT 320 (CAT320-SE-1042), Customer: Southeast Construction, Hours: 4312, Last PM: 2026-09-02
+Prior service history:
+- 2026-06-14 [WO-10234]: Reported "Boom raises slowly under load" — Resolution: Replaced main control valve O-rings; hydraulic response restored. Notes: No fault codes present at time of service. Recommend monitoring filter condition.
+- 2026-09-02 [WO-10590]: Reported "Routine preventive maintenance" — Resolution: Hydraulic fluid and filter replaced; system pressure tested within spec. Notes: No anomalies observed.
+
+PREVIOUSLY SAVED ASSESSMENTS (prior AI-generated analysis and recommendations that a technician chose to save for this exact equipment — NOT verified outcomes. Saving one, or associating it with a work order below, does not confirm its recommendations were performed, its diagnosis was confirmed, or the reported symptom was resolved. Any work order's own documented resolution/notes, supplied separately under KNOWN PRIOR RECORDS, is the only authoritative record of what was actually done):
+- Saved 2026-09-20T09:30:00+00:00 by unspecified technician: category=Hydraulic, priority=Low, reported_issue="Swing motor is noisy when the cab rotates left", recommendations=['Listen for the noise with the engine at idle and at full throttle.']
+- Saved 2026-06-10T14:05:00+00:00 by J. Alvarez, associated with work order WO-10234 (association only — not confirmation that the work order addressed this): category=Hydraulic, priority=Medium, reported_issue="Boom raises slowly under load", recommendations=['Inspect the main control valve for internal leakage.', 'Check hydraulic filter condition and fluid level.']
