@@ -1,10 +1,11 @@
-# Identities that GitHub Actions uses to run Terraform for infra/poc. GitHub proves which
-# repository and workflow context is asking (OIDC), so no secret is stored anywhere.
+# Identities that GitHub Actions uses to release the POC. GitHub proves which repository
+# and workflow context is asking (OIDC), so no secret is stored anywhere.
 #
 # They live here, not in infra/poc, so the pipeline can never change its own permissions.
 #
-#   plan  - read-only; used for pull requests and for the plan on main
-#   apply - can change the POC; only usable from the protected GitHub environment
+#   plan          - read-only; used for pull requests and for the plan on main
+#   apply         - can change the POC; only usable from the protected GitHub environment
+#   agent release - creates and evaluates Foundry agent versions; only usable from main
 
 locals {
   github_issuer = "https://token.actions.githubusercontent.com"
@@ -14,6 +15,16 @@ locals {
   default_workspace_id = "/subscriptions/${var.subscription_id}/resourceGroups/DefaultResourceGroup-USW3/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-${var.subscription_id}-USW3"
 
   poc_function_storage_id = "${local.poc_rg_id}/providers/Microsoft.Storage/storageAccounts/rgequipmentaipocbdaf"
+
+  poc_foundry_project_id = "${local.poc_rg_id}/providers/Microsoft.CognitiveServices/accounts/${var.poc_foundry_account_name}/projects/${var.poc_foundry_project_name}"
+}
+
+# Saved Terraform plans for infra/poc. A plan file can contain values from state, and this
+# repository is public, so plans are kept here and never uploaded as workflow artifacts.
+resource "azurerm_storage_container" "tfplans" {
+  name                  = "tfplans"
+  storage_account_id    = azurerm_storage_account.tfstate.id
+  container_access_type = "private"
 }
 
 # --- plan ----------------------------------------------------------------------------------
@@ -65,6 +76,9 @@ resource "azurerm_role_assignment" "ci_plan" {
     storage-blob-read = { scope = local.poc_function_storage_id, role = "Storage Blob Data Reader" }
     # Plans run with -lock=false, so read access to state is enough.
     state-read = { scope = azurerm_storage_container.tfstate.id, role = "Storage Blob Data Reader" }
+    # The plan job saves the plan it made. Pull requests can use this identity too, so the
+    # apply job checks the file's checksum before it applies it.
+    plans-write = { scope = azurerm_storage_container.tfplans.id, role = "Storage Blob Data Contributor" }
   }
 
   scope                = each.value.scope
@@ -106,10 +120,54 @@ resource "azurerm_role_assignment" "ci_apply" {
     workspace-reader  = { scope = local.default_workspace_id, role = "Reader" }
     storage-blob-read = { scope = local.poc_function_storage_id, role = "Storage Blob Data Reader" }
     state-write       = { scope = azurerm_storage_container.tfstate.id, role = "Storage Blob Data Contributor" }
+    # Reads the saved plan that was reviewed, and applies exactly that.
+    plans-read = { scope = azurerm_storage_container.tfplans.id, role = "Storage Blob Data Reader" }
   }
 
   scope                = each.value.scope
   role_definition_name = each.value.role
   principal_id         = azurerm_user_assigned_identity.ci_apply.principal_id
   principal_type       = "ServicePrincipal"
+}
+
+# --- agent release -------------------------------------------------------------------------
+
+resource "azurerm_user_assigned_identity" "ci_agent_release" {
+  name                = "id-equipment-ai-poc-agent-release"
+  resource_group_name = azurerm_resource_group.tfstate.name
+  location            = azurerm_resource_group.tfstate.location
+  tags                = local.tags
+}
+
+# Only workflow runs on main can use this identity. Pull requests cannot create agent versions.
+resource "azurerm_federated_identity_credential" "ci_agent_release" {
+  name                      = "github-main"
+  user_assigned_identity_id = azurerm_user_assigned_identity.ci_agent_release.id
+  issuer                    = local.github_issuer
+  audience                  = ["api://AzureADTokenExchange"]
+  subject                   = "${var.github_oidc_subject_prefix}:ref:refs/heads/main"
+}
+
+# Creating an agent version and calling one (to evaluate it) are the same data action in
+# Foundry, so this role cannot be split further. It cannot delete or publish agents.
+resource "azurerm_role_definition" "ci_agent_release" {
+  name              = "Foundry Agent Release (POC)"
+  description       = "Create Foundry agent versions and call them for evaluation. No delete, no publish, no other Cognitive Services data access."
+  scope             = local.poc_rg_id
+  assignable_scopes = [local.poc_rg_id]
+
+  permissions {
+    actions = ["Microsoft.CognitiveServices/*/read"]
+    data_actions = [
+      "Microsoft.CognitiveServices/accounts/AIServices/agents/read",
+      "Microsoft.CognitiveServices/accounts/AIServices/agents/write",
+    ]
+  }
+}
+
+resource "azurerm_role_assignment" "ci_agent_release" {
+  scope              = local.poc_foundry_project_id
+  role_definition_id = azurerm_role_definition.ci_agent_release.role_definition_resource_id
+  principal_id       = azurerm_user_assigned_identity.ci_agent_release.principal_id
+  principal_type     = "ServicePrincipal"
 }

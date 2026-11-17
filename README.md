@@ -411,7 +411,7 @@ change resources in the portal or with `az`, or the next apply will revert the c
 
 | Folder | Holds | State blob |
 |---|---|---|
-| `infra/bootstrap/` | The storage account that keeps Terraform state | `bootstrap.tfstate` |
+| `infra/bootstrap/` | The storage for Terraform state and saved plans, and the identities GitHub Actions signs in with. Applied by hand | `bootstrap.tfstate` |
 | `infra/poc/` | The environment: Foundry, Cosmos DB, the Function App, storage, Application Insights and role assignments | `poc.tfstate` |
 
 State lives in a separate resource group, in a storage account that only accepts Entra ID sign-in. A

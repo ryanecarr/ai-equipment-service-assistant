@@ -44,3 +44,15 @@ variable "poc_resource_group_name" {
   type        = string
   default     = "rg-equipment-ai-poc"
 }
+
+variable "poc_foundry_account_name" {
+  description = "Foundry account that holds the agent the release pipeline publishes."
+  type        = string
+  default     = "foundry-equipment-ai-poc"
+}
+
+variable "poc_foundry_project_name" {
+  description = "Foundry project that holds the agent the release pipeline publishes."
+  type        = string
+  default     = "equipment-service-poc"
+}
