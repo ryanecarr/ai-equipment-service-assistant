@@ -516,7 +516,7 @@ The grounding block has no cap on work orders, so each one adds to every agent c
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-dev.txt   # the scripts and tests need the second file
 cp local.settings.json.example local.settings.json   # then fill in the placeholders
 python -m scripts.publish_agent --reference-only --version 5   # writes agent_reference.json
 az login
@@ -539,8 +539,9 @@ python -m scripts.publish_agent --reference-only --version <n>   # writes agent_
 func azure functionapp publish <function-app>
 ```
 
-The first command records which agent version this deployment calls. `agent_reference.json` is
-git-ignored but is included in the published package, so the code and its agent version deploy together.
+The first command records which agent version this deployment calls; it needs the environment from
+"Local development". `agent_reference.json` is git-ignored but is included in the published package, so
+the code and its agent version deploy together.
 
 Publishing runs a remote Oryx build against the Function App's Python version. The Function App
 settings come from `infra/poc/function.tf`, so a new setting is added there and applied before the code
