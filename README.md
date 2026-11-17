@@ -89,9 +89,9 @@ don't rely on the agent following them.
 
 ## Foundry agent
 
-The agent is configured in Foundry, not in this repo, and the app refers to it by `AGENT_NAME`. To
-recreate it, use a prompt agent on `gpt-5-mini` with reasoning effort `low`, the `web_search` tool, and
-these instructions:
+The agent's definition lives in `agents/equipment-service-assistant/`: `agent.yaml` (a prompt agent on
+`gpt-5-mini` with reasoning effort `low` and the `web_search` tool) and `instructions.md`. This copy of
+the instructions is kept identical to that file by a test:
 
 ```
 You are an equipment service support assistant for heavy equipment technicians.
@@ -134,7 +134,7 @@ with project_client.get_openai_client() as openai_client:
     conversation = openai_client.conversations.create(items=[{"type": "message", "role": "user", "content": composed_message}])
     response = openai_client.responses.create(
         conversation=conversation.id,
-        extra_body={"agent_reference": {"name": AGENT_NAME, "type": "agent_reference"}},
+        extra_body={"agent_reference": {"name": agent_name, "version": agent_version, "type": "agent_reference"}},
         input="",
     )
 ```
@@ -142,6 +142,12 @@ with project_client.get_openai_client() as openai_client:
 The field must be `agent_reference`, with an explicit `"type"`. Using `"agent"` or leaving out `"type"`
 returns a 400. Each request uses one conversation, deleted afterwards in a `finally` block. If a
 response fails validation, the agent is asked once to correct it in the same conversation.
+
+The app always names an exact agent version. The name and version come from `agent_reference.json`, a
+generated file that ships inside the deployment package and is not committed. Without a valid file the
+app returns a 500 (`agent_reference_invalid`) and does not call the agent. It never falls back to the
+agent's latest version, which may be an untested candidate. The version in use and the commit it was
+built from are logged at `INFO` when a worker starts.
 
 ## Checks on agent output
 
@@ -294,6 +300,7 @@ returns Pydantic's own message, which names the failing fields and can quote wha
 | Agent response fails schema after one retry | 502 | `invalid_agent_response` |
 | Cosmos unreachable, access denied, or throttled past the SDK's retries | 503 | `grounding_data_unavailable` |
 | Stored record fails validation | 500 | `invalid_grounding_record` |
+| `agent_reference.json` missing, invalid, or built for another Foundry project | 500 | `agent_reference_invalid` |
 | Unhandled error | 500 | `internal_error` |
 | Missing or wrong function key | 401 | None: returned by the platform |
 
@@ -380,7 +387,6 @@ Then open `http://localhost:4200`.
 | Setting | Purpose |
 |---|---|
 | `PROJECT_ENDPOINT` | Foundry project endpoint |
-| `AGENT_NAME` | Foundry agent name |
 | `COSMOS_ENDPOINT` | Cosmos DB account endpoint |
 | `COSMOS_DATABASE_NAME` | Defaults to `equipment-service-db` |
 | `COSMOS_EQUIPMENT_CONTAINER` | Defaults to `equipment` |
@@ -439,7 +445,8 @@ Contributor on the state container. `infra/bootstrap` grants the second to whoev
 
 Three things stay outside Terraform:
 
-- The Foundry agent named by `AGENT_NAME` is created inside the project, not as an Azure resource.
+- The Foundry agent is created inside the project, not as an Azure resource. Its definition is in
+  `agents/`.
 - Application code is deployed with `func azure functionapp publish`; see "Deployment".
 - The Log Analytics workspace behind Application Insights is one Azure created by default; it is
   referenced, not managed.
@@ -511,6 +518,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp local.settings.json.example local.settings.json   # then fill in the placeholders
+python -m scripts.publish_agent --reference-only --version 5   # writes agent_reference.json
 az login
 func start                                            # or: func start --enableAuth
 ```
@@ -527,8 +535,12 @@ curl -s -X POST http://localhost:7071/api/assess \
 ## Deployment
 
 ```bash
+python -m scripts.publish_agent --reference-only --version <n>   # writes agent_reference.json
 func azure functionapp publish <function-app>
 ```
+
+The first command records which agent version this deployment calls. `agent_reference.json` is
+git-ignored but is included in the published package, so the code and its agent version deploy together.
 
 Publishing runs a remote Oryx build against the Function App's Python version. The Function App
 settings come from `infra/poc/function.tf`, so a new setting is added there and applied before the code

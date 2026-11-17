@@ -14,3 +14,4 @@ tests/
 ui/**
 requirements-dev.txt
 .pytest_cache/
+CLAUDE.md
