@@ -11,6 +11,8 @@ prompt agent. `README.md` describes the architecture, API and setup.
 - Both run in CI on every pull request (`.github/workflows/ci.yml`) and need no Azure access.
 - Agent evaluation: `python -m scripts.evaluate_agent --version <n>`. It calls the live agent, so it
   needs `az login` and is not part of the pull request checks.
+- Merging to `main` starts a release (`.github/workflows/release.yml`) when application, agent,
+  script or `infra/poc` files changed. `README.md`, "Release", describes it and the rollback.
 
 ## Rules
 
@@ -18,6 +20,7 @@ prompt agent. `README.md` describes the architecture, API and setup.
   portal. Read-only `az` commands are fine.
 - **Never run `terraform apply`, deploy the Function code, or create a Foundry agent version.**
   CI does these after approval in the `poc` environment, or the repository owner does them by hand.
+  `python -m scripts.publish_agent --create` is for the release workflow only.
 - **`infra/bootstrap` is applied by hand by the repository owner.** It holds the Terraform state
   storage and the CI identities. For a change there, write the Terraform and give the exact
   commands to run. CI identities use OIDC, hold no stored secrets, and are each scoped to one job.

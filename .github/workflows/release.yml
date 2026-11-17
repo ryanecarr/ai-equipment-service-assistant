@@ -1,0 +1,330 @@
+name: Release
+
+# One release for the application and its Foundry agent. Every release creates a new agent
+# version from agents/, evaluates that exact version, and builds a package that calls it.
+# After approval the package is deployed, so the application and its agent version always
+# change together. README.md, "Release", describes the flow and how to roll back.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "function_app.py"
+      - "host.json"
+      - "requirements.txt"
+      - ".funcignore"
+      - "agents/**"
+      - "scripts/**"
+      - "infra/poc/**"
+      - ".github/workflows/release.yml"
+  # Releases the current tip of main, for example after a run went stale.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.14" # matches the Function App runtime in infra/poc/function.tf
+  # Not secrets. The application refuses a package built for a different Foundry project.
+  PROJECT_ENDPOINT: https://foundry-equipment-ai-poc.services.ai.azure.com/api/projects/equipment-service-poc
+  FUNCTION_APP_NAME: func-equipment-service-poc
+  RESOURCE_GROUP: rg-equipment-ai-poc
+  STATE_STORAGE_ACCOUNT: stequipaipoctfstate
+  PLANS_CONTAINER: tfplans
+
+jobs:
+  checks:
+    name: Checks
+    # The identities below only work from main; this makes a run from elsewhere stop early.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      # Includes the checks on agents/<name>/agent.yaml and instructions.md.
+      - name: Unit tests
+        run: python -m pytest tests/
+
+      - name: Matching evaluation
+        run: python -m scripts.evaluate_matching
+
+  # Creates the candidate agent version and evaluates it. Nothing calls the new version
+  # except this evaluation: the deployed application keeps its own pinned version.
+  candidate:
+    name: Agent version
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC sign-in to Azure
+    outputs:
+      agent_version: ${{ steps.create.outputs.agent_version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      # This identity can create and call agent versions in the Foundry project, nothing else.
+      - name: Sign in as the agent release identity
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_AGENT_RELEASE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Create the agent version
+        id: create
+        run: |
+          python -m scripts.publish_agent --create --commit "$GITHUB_SHA"
+          version=$(jq -r .agent_version agent_reference.json)
+          echo "agent_version=$version" >> "$GITHUB_OUTPUT"
+          echo "Created agent version **$version** from commit \`$GITHUB_SHA\`." >> "$GITHUB_STEP_SUMMARY"
+
+      # Exit code 1 (a blocking assertion failed) or 2 (the run could not finish) stops the
+      # release here, before anything is packaged or offered for approval.
+      - name: Evaluate that version
+        env:
+          AGENT_VERSION: ${{ steps.create.outputs.agent_version }}
+        run: python -m scripts.evaluate_agent --version "$AGENT_VERSION" --commit "$GITHUB_SHA" --report eval-report.json
+
+      - name: Keep the evaluation report
+        if: always() && steps.create.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: eval-report
+          path: eval-report.json
+
+      - name: Hand the agent reference to the package job
+        uses: actions/upload-artifact@v7
+        with:
+          name: agent-reference
+          path: agent_reference.json
+
+  # Builds the one package that is deployed, kept in the GitHub Release, and redeployed by a
+  # rollback. Dependencies are installed here, so the package is complete and is never rebuilt.
+  package:
+    name: Package
+    needs: candidate
+    runs-on: ubuntu-latest # the Function App runs on Linux
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: agent-reference
+
+      - name: Install the dependencies into the package
+        run: pip install -r requirements.txt --target .python_packages/lib/site-packages
+
+      # The build script itself needs pydantic to validate the agent reference.
+      - name: Build the package
+        run: |
+          pip install -r requirements.txt
+          python -m scripts.build_package --output package.zip
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: package
+          path: package.zip
+
+  # Makes the Terraform plan a reviewer reads before approving, and saves that exact plan.
+  plan:
+    name: Terraform plan
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      blob: ${{ steps.save.outputs.blob }}
+      sha256: ${{ steps.save.outputs.sha256 }}
+      terraform_version: ${{ steps.save.outputs.terraform_version }}
+    defaults:
+      run:
+        working-directory: infra/poc
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_PLAN_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # JSON list of object IDs, e.g. ["00000000-0000-0000-0000-000000000000"]
+      TF_VAR_developer_principal_ids: ${{ secrets.DEVELOPER_PRINCIPAL_IDS }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~1.17"
+          terraform_wrapper: false # so the version can be read from the command's output
+
+      - name: Format
+        run: terraform fmt -check -recursive
+
+      # backend.tf uses the Azure CLI session for local runs; here it uses OIDC instead.
+      - name: Init
+        run: terraform init -backend-config="use_cli=false" -backend-config="use_oidc=true"
+
+      - name: Validate
+        run: terraform validate
+
+      # The plan identity is read-only, so it cannot take the state lock.
+      - name: Plan
+        run: terraform plan -lock=false -out=tfplan
+
+      # A plan file can hold values from state and this repository is public, so the plan
+      # goes to private storage, never to a workflow artifact. The plan identity is also
+      # usable from pull requests and cannot write there; this identity is main-only.
+      - name: Sign in as the plan store identity
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_PLAN_STORE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      # The checksum travels to the deploy job through the workflow, not through storage,
+      # so a plan swapped in storage would not match it.
+      - name: Save the plan
+        id: save
+        run: |
+          blob="$GITHUB_SHA/run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.tfplan"
+          az storage blob upload --auth-mode login --account-name "$STATE_STORAGE_ACCOUNT" \
+            --container-name "$PLANS_CONTAINER" --name "$blob" --file tfplan --only-show-errors --output none
+          echo "blob=$blob" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum tfplan | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+          echo "terraform_version=$(terraform version -json | jq -r .terraform_version)" >> "$GITHUB_OUTPUT"
+
+  # Waits for a reviewer. Read the Terraform plan job's output and the evaluation in the
+  # Agent version job before approving.
+  deploy:
+    name: Deploy
+    needs: [candidate, package, plan]
+    runs-on: ubuntu-latest
+    environment: poc
+    # Shared with the Rollback workflow: one deployment to the environment at a time.
+    concurrency:
+      group: deploy-poc
+      cancel-in-progress: false
+    permissions:
+      contents: write # creates the GitHub Release
+      id-token: write
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_APPLY_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # An older run approved late must not replace a newer deployment.
+      - name: Stop if main has moved on
+        run: |
+          tip=$(git ls-remote origin refs/heads/main | cut -f 1)
+          if [ "$tip" != "$GITHUB_SHA" ]; then
+            echo "::error::main is now at $tip, but this run was built from $GITHUB_SHA. It is stale and deploys nothing. Approve the run for the newer commit, or start the Release workflow by hand."
+            exit 1
+          fi
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: package
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: agent-reference
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: eval-report
+
+      - name: Sign in as the apply identity
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_APPLY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ needs.plan.outputs.terraform_version }} # the version that made the plan
+          terraform_wrapper: false
+
+      - name: Fetch the reviewed plan and check it is the one that was made
+        env:
+          PLAN_BLOB: ${{ needs.plan.outputs.blob }}
+          PLAN_SHA256: ${{ needs.plan.outputs.sha256 }}
+        run: |
+          az storage blob download --auth-mode login --account-name "$STATE_STORAGE_ACCOUNT" \
+            --container-name "$PLANS_CONTAINER" --name "$PLAN_BLOB" --file infra/poc/tfplan --only-show-errors --output none
+          echo "$PLAN_SHA256  infra/poc/tfplan" | sha256sum --check --strict
+
+      # Applies the saved plan and nothing else. If the state changed after the plan was
+      # made, Terraform refuses it as stale rather than working out a different plan.
+      - name: Apply the reviewed plan
+        working-directory: infra/poc
+        run: |
+          terraform init -backend-config="use_cli=false" -backend-config="use_oidc=true"
+          terraform apply tfplan
+
+      # No remote build: the package already holds its dependencies.
+      - name: Deploy the package
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.FUNCTION_APP_NAME }}
+          package: package.zip
+
+      # The function key is read at run time and never stored.
+      - name: Smoke test
+        run: |
+          host=$(az functionapp show --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP_NAME" \
+            --query "properties.defaultHostName || defaultHostName" --output tsv)
+          key=$(az functionapp keys list --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP_NAME" \
+            --query "functionKeys.default" --output tsv)
+          echo "::add-mask::$key"
+          FUNCTION_KEY="$key" python3 -m scripts.smoke_test --url "https://$host/api/assess"
+
+      # Only a release that passed its smoke test is kept, so every tag is a safe rollback target.
+      - name: Publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AGENT_VERSION: ${{ needs.candidate.outputs.agent_version }}
+        run: |
+          tag="release-$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT"
+          gh release create "$tag" package.zip agent_reference.json eval-report.json \
+            --target "$GITHUB_SHA" \
+            --title "$tag: agent version $AGENT_VERSION" \
+            --notes "Deployed from commit $GITHUB_SHA. The application calls agent version $AGENT_VERSION. To return to this release, run the Rollback workflow with the tag $tag."
+          echo "Deployed and released as **$tag**. The application now calls agent version **$AGENT_VERSION**." >> "$GITHUB_STEP_SUMMARY"

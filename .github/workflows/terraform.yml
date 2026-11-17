@@ -1,24 +1,15 @@
-name: Terraform
+name: Terraform plan
 
-# Runs Terraform for infra/poc. infra/bootstrap (state storage and this pipeline's own
-# identities) is applied by hand and is deliberately not run here.
+# Shows the Terraform plan for infra/poc on a pull request. It is a preview: nothing is
+# saved and nothing is applied. The plan that is applied is made on main by the Release
+# workflow. infra/bootstrap (state storage and this pipeline's own identities) is applied
+# by hand and is deliberately not run here.
 
 on:
   pull_request:
     paths:
       - "infra/poc/**"
       - ".github/workflows/terraform.yml"
-  push:
-    branches: [main]
-    paths:
-      - "infra/poc/**"
-      - ".github/workflows/terraform.yml"
-  workflow_dispatch:
-
-# One run at a time, so two applies can never race for the state.
-concurrency:
-  group: terraform-poc
-  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -29,6 +20,7 @@ env:
   TF_INPUT: "false"
   ARM_USE_OIDC: "true"
   ARM_USE_AZUREAD: "true"
+  ARM_CLIENT_ID: ${{ secrets.AZURE_PLAN_CLIENT_ID }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -43,8 +35,6 @@ jobs:
   plan:
     name: Plan
     runs-on: ubuntu-latest
-    env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_PLAN_CLIENT_ID }}
     steps:
       - uses: actions/checkout@v7
 
@@ -65,25 +55,3 @@ jobs:
       # The plan identity is read-only, so it cannot take the state lock.
       - name: Plan
         run: terraform plan -lock=false
-
-  apply:
-    name: Apply
-    needs: plan
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    # The environment requires a reviewer. Read the Plan job's output before approving.
-    environment: poc
-    env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_APPLY_CLIENT_ID }}
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: "~1.17"
-
-      - name: Init
-        run: terraform init -backend-config="use_cli=false" -backend-config="use_oidc=true"
-
-      - name: Apply
-        run: terraform apply -auto-approve
