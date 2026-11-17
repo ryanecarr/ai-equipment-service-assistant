@@ -4,6 +4,7 @@
 # They live here, not in infra/poc, so the pipeline can never change its own permissions.
 #
 #   plan          - read-only; used for pull requests and for the plan on main
+#   plan store    - saves the plan made on main for the apply job; only usable from main
 #   apply         - can change the POC; only usable from the protected GitHub environment
 #   agent release - creates and evaluates Foundry agent versions; only usable from main
 
@@ -21,6 +22,8 @@ locals {
 
 # Saved Terraform plans for infra/poc. A plan file can contain values from state, and this
 # repository is public, so plans are kept here and never uploaded as workflow artifacts.
+# Only the plan store identity can write here, and only from main; the apply identity reads.
+# A pull request's plan is a preview and is never saved.
 resource "azurerm_storage_container" "tfplans" {
   name                  = "tfplans"
   storage_account_id    = azurerm_storage_account.tfstate.id
@@ -76,9 +79,6 @@ resource "azurerm_role_assignment" "ci_plan" {
     storage-blob-read = { scope = local.poc_function_storage_id, role = "Storage Blob Data Reader" }
     # Plans run with -lock=false, so read access to state is enough.
     state-read = { scope = azurerm_storage_container.tfstate.id, role = "Storage Blob Data Reader" }
-    # The plan job saves the plan it made. Pull requests can use this identity too, so the
-    # apply job checks the file's checksum before it applies it.
-    plans-write = { scope = azurerm_storage_container.tfplans.id, role = "Storage Blob Data Contributor" }
   }
 
   scope                = each.value.scope
@@ -92,6 +92,32 @@ resource "azurerm_role_assignment" "ci_plan_refresh" {
   role_definition_id = azurerm_role_definition.ci_plan_refresh.role_definition_resource_id
   principal_id       = azurerm_user_assigned_identity.ci_plan.principal_id
   principal_type     = "ServicePrincipal"
+}
+
+# --- plan store ----------------------------------------------------------------------------
+
+# Pull requests can use the plan identity, so it must not be able to write, replace or delete
+# a saved plan. This identity does only that, and only workflow runs on main can use it.
+resource "azurerm_user_assigned_identity" "ci_plan_store" {
+  name                = "id-equipment-ai-poc-tf-plan-store"
+  resource_group_name = azurerm_resource_group.tfstate.name
+  location            = azurerm_resource_group.tfstate.location
+  tags                = local.tags
+}
+
+resource "azurerm_federated_identity_credential" "ci_plan_store" {
+  name                      = "github-main"
+  user_assigned_identity_id = azurerm_user_assigned_identity.ci_plan_store.id
+  issuer                    = local.github_issuer
+  audience                  = ["api://AzureADTokenExchange"]
+  subject                   = "${var.github_oidc_subject_prefix}:ref:refs/heads/main"
+}
+
+resource "azurerm_role_assignment" "ci_plan_store" {
+  scope                = azurerm_storage_container.tfplans.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.ci_plan_store.principal_id
+  principal_type       = "ServicePrincipal"
 }
 
 # --- apply ---------------------------------------------------------------------------------
@@ -120,7 +146,8 @@ resource "azurerm_role_assignment" "ci_apply" {
     workspace-reader  = { scope = local.default_workspace_id, role = "Reader" }
     storage-blob-read = { scope = local.poc_function_storage_id, role = "Storage Blob Data Reader" }
     state-write       = { scope = azurerm_storage_container.tfstate.id, role = "Storage Blob Data Contributor" }
-    # Reads the saved plan that was reviewed, and applies exactly that.
+    # Reads the saved plan that was reviewed, and applies exactly that. It checks the file
+    # against a checksum the plan job on main passes through the workflow, not through storage.
     plans-read = { scope = azurerm_storage_container.tfplans.id, role = "Storage Blob Data Reader" }
   }
 

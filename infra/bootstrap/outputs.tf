@@ -15,6 +15,11 @@ output "ci_plan_client_id" {
   value       = azurerm_user_assigned_identity.ci_plan.client_id
 }
 
+output "ci_plan_store_client_id" {
+  description = "GitHub secret AZURE_PLAN_STORE_CLIENT_ID."
+  value       = azurerm_user_assigned_identity.ci_plan_store.client_id
+}
+
 output "ci_apply_client_id" {
   description = "GitHub environment secret AZURE_APPLY_CLIENT_ID."
   value       = azurerm_user_assigned_identity.ci_apply.client_id
