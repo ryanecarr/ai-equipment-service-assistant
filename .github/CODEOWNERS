@@ -1,0 +1,3 @@
+# GitHub requests a review from the owner of any path a pull request touches.
+# One owner for the whole repository until there is a second maintainer.
+* @ryanecarr

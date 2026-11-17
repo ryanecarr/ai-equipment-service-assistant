@@ -1,0 +1,44 @@
+name: CI
+
+# Tests for every pull request and every push to main. Needs no Azure access.
+# There is deliberately no path filter: a check that a filter skips stays "pending", which
+# would block pull requests if this check is ever made required.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A newer push to the same branch replaces the run still in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14" # matches the Function App runtime in infra/poc/function.tf
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      # "python -m" puts the repository root on the import path; bare "pytest" does not.
+      - name: Unit tests
+        run: python -m pytest tests/
+
+      # Exits non-zero if any request is linked to the wrong machine.
+      - name: Matching evaluation
+        run: python -m scripts.evaluate_matching
