@@ -30,6 +30,9 @@ prompt agent. `README.md` describes the architecture, API and setup.
 - **The agent definition lives in `agents/<name>/`** (`agent.yaml` and `instructions.md`), not in
   the Foundry portal. Until the release workflow is proven, `README.md` keeps a copy of the
   instructions and a test keeps the two identical.
+- **The app always calls an exact agent version**, read from the generated, git-ignored
+  `agent_reference.json`. Never add a fallback to the agent's latest version. For a local run,
+  write the file with `python -m scripts.publish_agent --reference-only --version <n>`.
 - **All data is sample data.** Keep seed data, test fixtures and evaluation cases that way.
 - **Work on a branch and open a pull request.** Keep each one small enough to review.
 

@@ -1,6 +1,7 @@
 import pytest
 
 import app.cosmos as cosmos_mod
+import app.foundry.agent_reference as agent_reference_mod
 import app.grounding.repository as repository_mod
 import app.history.repository as history_repository_mod
 from cosmos_fakes import FakeContainer, repository_for
@@ -10,6 +11,7 @@ from cosmos_fakes import FakeContainer, repository_for
 def reset_cosmos_singletons():
     yield
     cosmos_mod._database = None
+    agent_reference_mod._reference = None
     repository_mod._repository = None
     history_repository_mod._repository = None
 
