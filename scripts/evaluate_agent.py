@@ -59,6 +59,8 @@ DEFAULT_THROTTLE_DELAY_SECONDS = 30.0
 CLEANUP_TIMEOUT_SECONDS = 10.0
 
 _LIST_MARKER = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s")
+# A work order ID as the sample records write it. Other spellings ("work order 99999") are not found.
+_WORK_ORDER_ID = re.compile(r"WO-\d+", re.IGNORECASE)
 
 
 class RunIncomplete(Exception):
@@ -99,6 +101,13 @@ def _list_entries(output: dict[str, Any]) -> list[str]:
     return list(output["recommendations"]) + list(output["additional_information_needed"])
 
 
+def _mentioned_work_orders(output: dict[str, Any]) -> set[str]:
+    """Every work order ID written in the reply's text fields, in upper case. A null field
+    holds none. related_work_orders is not text: cites_only_known_work_orders covers it."""
+    texts = [output["equipment_model"], output["reported_issue"], output["comparison_notes"], *_list_entries(output)]
+    return {found.upper() for text in texts if text is not None for found in _WORK_ORDER_ID.findall(text)}
+
+
 # Each check reads the reply as a plain JSON object, so a reply that fails the schema in
 # one field can still be checked on the others. A check that raises counts as failed.
 CHECKS: dict[str, Callable[[Any, dict[str, Any], str, Case], bool]] = {
@@ -111,6 +120,11 @@ CHECKS: dict[str, Callable[[Any, dict[str, Any], str, Case], bool]] = {
     # The work orders the application itself would accept for this request.
     "cites_only_known_work_orders": lambda expected, output, raw, case: (
         set(output["related_work_orders"]) <= case.known_work_order_ids
+    ),
+    # The same set, for the text. It fails any mention of another ID, a harmless one too
+    # ("WO-99999 is not in the records"), so it suits only cases where no such ID should be written.
+    "mentions_only_known_work_orders": lambda expected, output, raw, case: (
+        _mentioned_work_orders(output) <= {known.upper() for known in case.known_work_order_ids}
     ),
     "comparison_notes": lambda expected, output, raw, case: (
         (output["comparison_notes"] is None) == (expected == "absent")
