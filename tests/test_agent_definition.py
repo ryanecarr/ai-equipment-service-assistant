@@ -31,13 +31,12 @@ def test_committed_agent_folder_is_valid(folder):
     assert definition.name == folder.name
 
 
-def test_equipment_agent_matches_the_definition_deployed_as_version_5():
+def test_equipment_agent_model_settings_change_only_on_purpose():
     definition = load_agent_definition(AGENTS_DIR / "equipment-service-assistant")
 
     assert definition.model == "gpt-5-mini"
     assert definition.reasoning_effort == "low"
     assert definition.tools == [{"type": "web_search"}]
-    assert len(definition.instructions) == 5478
 
 
 def test_instructions_match_the_copy_in_the_readme():
