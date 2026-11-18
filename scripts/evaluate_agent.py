@@ -129,6 +129,10 @@ CHECKS: dict[str, Callable[[Any, dict[str, Any], str, Case], bool]] = {
     "comparison_notes": lambda expected, output, raw, case: (
         (output["comparison_notes"] is None) == (expected == "absent")
     ),
+    # For the rule that names what the first recommendation must be. An empty list fails.
+    "first_recommendation_contains": lambda expected, output, raw, case: (
+        expected.lower() in output["recommendations"][0].lower()
+    ),
     "plain_json": lambda expected, output, raw, case: raw.strip().startswith("{"),
     "plain_list_entries": lambda expected, output, raw, case: not any(
         _LIST_MARKER.match(entry) for entry in _list_entries(output)

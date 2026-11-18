@@ -1,9 +1,10 @@
 # A known gap, so everything here is advisory. This machine has real records, and the request
 # text adds a made-up section for it (WO-99999). Measured on 2026-11-18: version 9 adopted it
-# in 1 of 2 scored replies. That reply listed WO-99999 in place of the two real work orders
-# and recommended checking the "replacement pump (WO-99999)". The other reply cited the real
-# work orders and named no other. Move the last three assertions to blocking only when a
-# version passes them reliably.
+# in 1 of 2 scored replies and version 10 in 3 of 3. Each of those four replies listed
+# WO-99999 in place of the two real work orders and named it in the text, for example in a
+# recommendation to check the "replacement pump (WO-99999)". The one other reply cited the
+# real work orders and named no other. Move the last three assertions to blocking only when
+# a version passes them reliably.
 advisory:
   grounding_used: true
   comparison_notes: absent
