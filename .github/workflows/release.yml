@@ -2,8 +2,10 @@ name: Release
 
 # One release for the application and its Foundry agent. Every release creates a new agent
 # version from agents/, evaluates that exact version, and builds a package that calls it.
-# After approval the package is deployed, so the application and its agent version always
-# change together. README.md, "Release", describes the flow and how to roll back.
+# A release whose agent definition differs from the last release evaluates the version three
+# times and reviews the runs. After approval the package is deployed, so the application and
+# its agent version always change together. README.md, "Release", describes the flow and how
+# to roll back.
 
 on:
   push:
@@ -20,6 +22,12 @@ on:
       - ".github/workflows/release.yml"
   # Releases the current tip of main, for example after a run went stale.
   workflow_dispatch:
+    inputs:
+      # Can only add the extra evaluations. Nothing here can skip them.
+      extra_evaluations:
+        description: "Evaluate the agent version three times and review the runs, even if the agent definition did not change"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -71,6 +79,7 @@ jobs:
       id-token: write # OIDC sign-in to Azure
     outputs:
       agent_version: ${{ steps.create.outputs.agent_version }}
+      extra_evaluations: ${{ steps.change.outputs.extra }}
     steps:
       - uses: actions/checkout@v7
 
@@ -84,6 +93,31 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt -r requirements-dev.txt
+
+      # Decides between one evaluation and three. The agent definition is compared with the
+      # newest GitHub Release, the last commit that was deployed, and not with the previous
+      # push: an instruction change that merged but never deployed still counts in every
+      # later run. It runs before the version is created, so a failure here costs nothing.
+      # The newest release's reports are the baselines the extra evaluations are reviewed against.
+      - name: Compare the agent definition with the last release
+        id: change
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REQUESTED: ${{ inputs.extra_evaluations }}
+        run: |
+          gh release list --limit 100 --json tagName,publishedAt,isDraft > releases.json
+          arguments=(--releases releases.json --output agent-change.json)
+          if [ "$REQUESTED" = "true" ]; then arguments+=(--requested); fi
+          python -m scripts.agent_change "${arguments[@]}"
+          extra=$(jq -r .extra_evaluations agent-change.json)
+          release=$(jq -r '.release // ""' agent-change.json)
+          if [ "$extra" != "false" ] && [ -n "$release" ]; then
+            gh release download "$release" --pattern 'eval-report*.json' --dir eval-baselines
+          fi
+          echo "extra=$extra" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          jq -r .summary agent-change.json >> "$GITHUB_STEP_SUMMARY"
 
       # This identity can create and call agent versions in the Foundry project, nothing else.
       - name: Sign in as the agent release identity
@@ -108,12 +142,35 @@ jobs:
           AGENT_VERSION: ${{ steps.create.outputs.agent_version }}
         run: python -m scripts.evaluate_agent --version "$AGENT_VERSION" --commit "$GITHUB_SHA" --report eval-report.json
 
+      # Two more evaluations of the same version, commit and project, five minutes apart
+      # because they share the application's model capacity, then the review a reviewer
+      # reads before approving. The condition is "not false" on purpose: if the comparison
+      # ever leaves no answer, the extra evaluations run. A blocking failure in any attempt
+      # (exit code 1) or a run that cannot finish in two attempts (exit code 2) stops the
+      # release here. Advisory and rubric findings only shape the review's recommendation.
+      - name: Evaluate that version twice more and review the three runs
+        id: extra
+        if: steps.change.outputs.extra != 'false'
+        env:
+          BASELINE_RELEASE: ${{ steps.change.outputs.release }}
+        run: |
+          python -m scripts.extra_evaluations --reference agent_reference.json --first-report eval-report.json \
+            --baselines eval-baselines --release "$BASELINE_RELEASE" --output-dir eval-extra --summary "$GITHUB_STEP_SUMMARY"
+
       - name: Keep the evaluation report
         if: always() && steps.create.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
           name: eval-report
           path: eval-report.json
+
+      # One report for every attempt, including the ones that did not finish, and the review.
+      - name: Keep the extra reports and the review
+        if: always() && steps.extra.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
+        with:
+          name: eval-reports-extra
+          path: eval-extra/
 
       - name: Hand the agent reference to the package job
         uses: actions/upload-artifact@v7
@@ -225,7 +282,8 @@ jobs:
           echo "terraform_version=$(terraform version -json | jq -r .terraform_version)" >> "$GITHUB_OUTPUT"
 
   # Waits for a reviewer. Read the Terraform plan job's output and the evaluation in the
-  # Agent version job before approving.
+  # Agent version job before approving. When the agent definition changed, the run's summary
+  # also holds the review of the three evaluations and its recommendation.
   deploy:
     name: Deploy
     needs: [candidate, package, plan]
@@ -269,6 +327,13 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: eval-report
+
+      # Exists only when this release made the extra evaluations.
+      - uses: actions/download-artifact@v8
+        if: needs.candidate.outputs.extra_evaluations != 'false'
+        with:
+          name: eval-reports-extra
+          path: eval-extra
 
       - name: Sign in as the apply identity
         uses: azure/login@v3
@@ -317,13 +382,18 @@ jobs:
           FUNCTION_KEY="$key" python3 -m scripts.smoke_test --url "https://$host/api/assess"
 
       # Only a release that passed its smoke test is kept, so every tag is a safe rollback target.
+      # The reports kept here are the baselines the next agent change is reviewed against.
       - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           AGENT_VERSION: ${{ needs.candidate.outputs.agent_version }}
         run: |
           tag="release-$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT"
-          gh release create "$tag" package.zip agent_reference.json eval-report.json \
+          assets=(package.zip agent_reference.json eval-report.json)
+          for file in eval-extra/*; do
+            if [ -f "$file" ]; then assets+=("$file"); fi
+          done
+          gh release create "$tag" "${assets[@]}" \
             --target "$GITHUB_SHA" \
             --title "$tag: agent version $AGENT_VERSION" \
             --notes "Deployed from commit $GITHUB_SHA. The application calls agent version $AGENT_VERSION. To return to this release, run the Rollback workflow with the tag $tag."
