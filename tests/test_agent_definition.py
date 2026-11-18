@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.agent_definition import AGENTS_DIR, REPO_ROOT, AgentDefinitionError, load_agent_definition
+from scripts.agent_definition import AGENTS_DIR, AgentDefinitionError, load_agent_definition
 
 AGENT_FOLDERS = sorted(path for path in AGENTS_DIR.iterdir() if path.is_dir())
 
@@ -37,15 +37,6 @@ def test_equipment_agent_model_settings_change_only_on_purpose():
     assert definition.model == "gpt-5-mini"
     assert definition.reasoning_effort == "low"
     assert definition.tools == [{"type": "web_search"}]
-
-
-def test_instructions_match_the_copy_in_the_readme():
-    # Temporary guard: the README keeps its own copy of the instructions until the release
-    # workflow is proven. Delete this test when that copy becomes a link.
-    definition = load_agent_definition(AGENTS_DIR / "equipment-service-assistant")
-    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-
-    assert f"```\n{definition.instructions}\n```" in readme
 
 
 def test_only_the_final_newline_is_dropped_from_instructions(tmp_path):

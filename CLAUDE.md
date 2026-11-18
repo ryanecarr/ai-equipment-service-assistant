@@ -33,8 +33,7 @@ prompt agent. `README.md` describes the architecture, API and setup.
   `tests/snapshots/` pins the full message; regenerate it with
   `UPDATE_SNAPSHOTS=1 python -m pytest tests/test_prompt_snapshots.py` and review the diff.
 - **The agent definition lives in `agents/<name>/`** (`agent.yaml` and `instructions.md`), not in
-  the Foundry portal. Until the release workflow is proven, `README.md` keeps a copy of the
-  instructions and a test keeps the two identical.
+  the Foundry portal. A release creates each agent version from those two files.
 - **The app always calls an exact agent version**, read from the generated, git-ignored
   `agent_reference.json`. Never add a fallback to the agent's latest version. For a local run,
   write the file with `python -m scripts.publish_agent --reference-only --version <n>`.
@@ -47,4 +46,9 @@ prompt agent. `README.md` describes the architecture, API and setup.
 ## Known quirks
 
 - Every Terraform plan for `infra/poc` shows `AzureWebJobsStorage` as an in-place change. That is
-  expected (see the comment in `infra/poc/function.tf`); do not try to fix it.
+  expected (see the comment in `infra/poc/function.tf`); do not try to fix it. The cause is in the
+  `azurerm` provider (checked in 5.14.0's source; related upstream issue
+  hashicorp/terraform-provider-azurerm#30732): it writes a connection string with an empty key on
+  every create and update unless the configuration sets the value, and it leaves the setting out of
+  the app settings it reads back. Deleting the line or adding `ignore_changes` would make the next
+  update write that keyless string over the identity-based setting.
