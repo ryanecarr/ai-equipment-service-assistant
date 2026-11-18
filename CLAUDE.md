@@ -13,6 +13,9 @@ prompt agent. `README.md` describes the architecture, API and setup.
   needs `az login` and is not part of the pull request checks.
 - Merging to `main` starts a release (`.github/workflows/release.yml`) when application, agent,
   script or `infra/poc` files changed. `README.md`, "Release", describes it and the rollback.
+- A release whose `agents/<name>/agent.yaml` or `instructions.md` differs from the newest GitHub
+  Release evaluates its agent version three times and reviews the runs. `README.md`, "When the agent
+  definition changes", has the rules.
 
 ## Rules
 

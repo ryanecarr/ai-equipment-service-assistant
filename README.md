@@ -165,6 +165,9 @@ scripts/
   agent_definition.py        # loads and validates an agents/<name>/ folder
   publish_agent.py           # creates an agent version (release only); writes agent_reference.json
   evaluate_agent.py          # scores one agent version against the evaluation cases
+  agent_change.py            # release: did the agent definition change since the last release?
+  extra_evaluations.py       # release: two more evaluations of a changed agent, and their review
+  review_evaluations.py      # the rules that turn several reports into a recommendation
   build_package.py           # builds the deployment package for a release
   smoke_test.py              # checks the deployed application answers one request
 seed-data/                   # source data for the import; not read at runtime
@@ -195,7 +198,8 @@ az login
 python -m scripts.evaluate_agent --version <n>   # writes eval-report.json
 ```
 
-Every release runs this against the version it has just created. To run it by hand, `<n>` is any
+Every release runs this against the version it has just created: once, or three times when the agent
+definition changed ("When the agent definition changes", below). To run it by hand, `<n>` is any
 existing version; the title of the latest GitHub Release names the one the application calls.
 
 This calls one exact agent version with the seven cases in
@@ -223,7 +227,8 @@ at a time because the agent shares the application's model capacity; a full run 
 
 In a release the conversations are not deleted: the agent release identity has no delete permission,
 so each delete is refused, reported in the log and skipped. Every release leaves its evaluation
-conversations, which hold only sample data, in the Foundry project.
+conversations, which hold only sample data, in the Foundry project. A release that evaluates three
+times leaves three times as many.
 
 Two known gaps, found in version 5 and still present in version 7, are written down in the case's
 `expect.yaml`, each with a comment:
@@ -241,6 +246,85 @@ Two known gaps, found in version 5 and still present in version 7, are written d
 Seen once and not yet understood: in version 7's release run the agent put the equipment ID in
 `equipment_model` (`CAT320-SE-1042`, not `CAT 320`) in the `grounded` and `saved_history_unverified`
 cases. The advisory `equipment_model_contains` assertion reported both.
+
+#### When the agent definition changes
+
+A release that changes an agent's `agent.yaml` or `instructions.md` evaluates the new version three
+times, not once, and writes a review of the runs for the person who approves Deploy. One run cannot
+show whether a failure is steady or occasional. Other releases keep their single evaluation.
+
+**What counts as a change.** Before a release creates its agent version, `scripts/agent_change.py`
+compares every `agents/<name>/agent.yaml` and `instructions.md` with the commit of the newest GitHub
+Release, which is the last commit that was deployed. It does not compare with the previous push. A
+change that merged but was never deployed therefore keeps counting in every later release, whether a
+push or a manual run starts it, until a release that contains it is deployed.
+
+| Situation | Evaluations |
+|---|---|
+| The definition is the same as in the newest GitHub Release | One |
+| A definition file was edited, added or removed since then | Three |
+| There is no GitHub Release to compare with | Three |
+| A manual run with `extra_evaluations` ticked | Three. The box can only add the extra evaluations; nothing skips them |
+| The comparison cannot be made | The release stops before it creates an agent version |
+
+**The runs.** After the first evaluation, `scripts/extra_evaluations.py` runs the same evaluation twice
+more against the same version, commit and project. The runs are made one at a time with a five-minute
+wait before each, because they share the application's model capacity. A run that ends incomplete is
+tried once more. Every attempt writes its own report (`eval-report-run-2.json`,
+`eval-report-run-2-retry.json`, `eval-report-run-3.json` and so on), including an attempt that did not
+finish, and no report is overwritten. This adds about 16 minutes to the release. The first evaluation
+is as before: if it fails or does not finish, the release stops there.
+
+**What stops the release.** Blocking assertions stop it. Advisory assertions and rubric lines never do.
+
+| Finding | Effect |
+|---|---|
+| A blocking assertion failed in any attempt, even one that then ended incomplete | The release stops at once, and that run is not retried |
+| A run did not finish in two attempts, or a report names another version, commit or project | The release stops |
+| Anything else, including advisory and rubric failures | Deploy is offered with a recommendation. The reviewer decides |
+
+**The review.** The baselines are the `eval-report*.json` files of the newest GitHub Release. They
+give each check a class. A *known gap* failed in at least one baseline that scored it. A *baseline
+pass* passed in every baseline that scored it. A check has *no baseline* if none scored it. A case
+that did not run and a rubric line the grader could not score are no evidence either way. A *new
+failure* is a baseline-pass check that fails in one of the candidate's reports, including the report
+of a run that did not finish.
+
+| Finding in the candidate's reports | Recommendation |
+|---|---|
+| A new failure in two or more reports | Reject |
+| A new failure in exactly one report | One more run, the tie-break, decides |
+| A check with no baseline failed | None |
+| Fewer than three evaluations finished | None |
+| A known gap failed | Listed. It changes nothing |
+| None of the above | Approve |
+
+The tie-break run is made in the same job, with one more attempt if it ends incomplete. If the
+disputed check fails again or another new failure appears, the recommendation is to reject. If a
+finished run scored the disputed check and it passed, the failure is cleared. Anything else leaves no
+recommendation.
+
+**Where to read it.** The run's summary page in Actions shows the recommendation and its reasons, a
+table of every report, the new failures, the known gaps with their result in each report, and every
+reply as it arrived. A notice, warning or error at the top of the run gives the outcome in one line.
+The `eval-reports-extra` artifact holds every report with `eval-review.md` and `eval-review.json`,
+also when the release stopped. After the deployment the same files are attached to the GitHub Release,
+where they are the baselines for the next change.
+
+**What the review leaves to the reviewer:**
+
+- It does not know what a change is meant to fix. A known gap that the change should close is in the
+  known gaps table with its result in every report; whether it closed is the reviewer's call.
+- A rubric line the grader could not score is listed with the report and case to read. A
+  recommendation to approve holds only if those lines are met.
+- After a rollback, the newest GitHub Release is the one that was rolled back from, not the live one.
+  Its reports are still the baselines, and the next release is still compared with its definition.
+  Reverting the commit on `main` changes the definition, so that release gets three evaluations. To
+  release the same definition again, start the release by hand with `extra_evaluations` ticked.
+- The job signs in to Azure once, and `azure/login` documents the sign-in as lasting about an hour.
+  The three runs normally end about 20 minutes after it. Retries and a tie-break that go past the hour
+  have not been tried; a run that loses its sign-in does not finish, and the release stops.
+- Two releases started close together evaluate at the same time and share the model capacity.
 
 ## API
 
@@ -570,18 +654,21 @@ curl -s -X POST http://localhost:7071/api/assess \
 
 Merging to `main` releases the application and its agent together (`.github/workflows/release.yml`).
 Each release creates a new agent version, evaluates that exact version, and deploys a package that calls
-it. A push that changes only documentation or tests does not start a release.
+it. A release that changes the agent definition evaluates the version three times and reviews the runs.
+A push that changes only documentation or tests does not start a release.
 
 | Job | Signs in as | What it does |
 |---|---|---|
 | Checks | Nothing | Unit tests and the matching evaluation |
-| Agent version | The agent release identity | Creates a Foundry agent version from `agents/` and runs the agent evaluation against it. A failed or unfinished evaluation stops the release here |
+| Agent version | The agent release identity | Creates a Foundry agent version from `agents/` and runs the agent evaluation against it: once, or three times with a review when the agent definition differs from the last release. A failed or unfinished evaluation stops the release here |
 | Package | Nothing | Builds `package.zip`: the code, its installed dependencies and an `agent_reference.json` naming the new version |
 | Terraform plan | The plan identity, then the plan store identity | Plans `infra/poc` and saves the plan file in private storage |
-| Deploy | The apply identity, after approval in the `poc` environment | Applies the saved plan, deploys `package.zip`, runs a smoke test, then publishes a GitHub Release holding the package, the agent reference and the evaluation report |
+| Deploy | The apply identity, after approval in the `poc` environment | Applies the saved plan, deploys `package.zip`, runs a smoke test, then publishes a GitHub Release holding the package, the agent reference and every evaluation report |
 
 Before approving, read the evaluation result in the Agent version job and the plan in the Terraform plan
-job. Every plan shows one in-place change to the Function App, the `AzureWebJobsStorage` setting; the
+job. When the agent definition changed, the run's summary page also holds the review of the three
+evaluations ("When the agent definition changes", under "Agent evaluation"). Its recommendation is
+advice: the approval is still the reviewer's decision. Every plan shows one in-place change to the Function App, the `AzureWebJobsStorage` setting; the
 comment in `infra/poc/function.tf` explains it. Anything else in the plan is a real change. What you
 approve is what runs:
 
@@ -603,13 +690,14 @@ changes, and `main` still holds the newer commit: revert it before the next merg
 - A failed evaluation blocks the release. The deployed application keeps its previous package and agent
   version; fix or revert on `main` to make it releasable again.
 - The evaluation shares the application's model capacity. It runs one case at a time, honors throttling
-  delays, and bounds its retries and run time. Separate evaluation capacity is the first improvement to
+  delays, and bounds its retries and run time. The extra evaluations of a changed agent wait five
+  minutes before each run for the same reason. Separate evaluation capacity is the first improvement to
   make when the POC gains regular users.
 - The agent's latest version in Foundry is a candidate, not the live one. A candidate that failed its
   evaluation stays there as the latest version, and anything that follows "latest", such as the Foundry
   playground, may use it. The application never does.
-- Every release creates a new agent version, even when `agents/` did not change. Nothing compares
-  versions by content.
+- Every release creates a new agent version, even when `agents/` did not change. The definition is
+  compared with the last release only to decide how many evaluations to run.
 - The smoke test shows the application answers a real request after the deployment. It does not show
   which package answered.
 - The release scripts are small and live in this repository. Shared tooling waits until a second

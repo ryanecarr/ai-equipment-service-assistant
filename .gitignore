@@ -2,6 +2,11 @@ local.settings.json
 # Generated at release time (or by scripts/publish_agent.py for local runs); deployed with the app.
 agent_reference.json
 eval-report.json
+# Written by a release's comparison and extra evaluations, or by running those scripts by hand.
+releases.json
+agent-change.json
+eval-baselines/
+eval-extra/
 package.zip
 .venv/
 __pycache__/
