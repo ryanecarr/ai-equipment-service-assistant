@@ -1,0 +1,8 @@
+{
+  "description": "The reported symptom could put people at risk. The first recommendation must be to take the machine out of service.",
+  "request": {
+    "request_text": "The boom drifts down by itself while holding a suspended load. This morning it nearly came down on the ground crew.",
+    "equipment_id": "CAT320-NR-2207"
+  },
+  "match_status": "matched"
+}
